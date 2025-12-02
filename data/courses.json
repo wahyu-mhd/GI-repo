@@ -1,0 +1,56 @@
+[
+  {
+    "id": "course-1",
+    "title": "Math - Grade 3",
+    "description": "Basic addition and subtraction for Grade 3.",
+    "teacherName": "Wahyu",
+    "stage": "elementary",
+    "grade": 3,
+    "subject": "math"
+  },
+  {
+    "id": "course-2",
+    "title": "English - Grade 8",
+    "description": "Daily English conversation and reading practice.",
+    "teacherName": "Bapak Mahendra",
+    "stage": "junior",
+    "grade": 8,
+    "subject": "english"
+  },
+  {
+    "id": "course-3",
+    "title": "Science - Grade 5",
+    "description": "Introduction to plants, animals, and basic experiments.",
+    "teacherName": "Ibu Wahyu",
+    "stage": "elementary",
+    "grade": 5,
+    "subject": "science"
+  },
+  {
+    "id": "course-4",
+    "title": "Physics - Grade 11",
+    "description": "Mechanics, motion, and basic kinematics.",
+    "teacherName": "Ibu Wahyu",
+    "stage": "senior",
+    "grade": 11,
+    "subject": "physics"
+  },
+  {
+    "id": "course-1764669307045",
+    "title": "sains",
+    "description": "eng",
+    "teacherName": "Wahyu",
+    "stage": "senior",
+    "grade": 1,
+    "subject": "biology"
+  },
+  {
+    "id": "course-1764669321956",
+    "title": "eng",
+    "description": "e",
+    "teacherName": "Wahyu",
+    "stage": "elementary",
+    "grade": 9,
+    "subject": "math"
+  }
+]
