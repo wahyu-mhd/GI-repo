@@ -2,28 +2,33 @@
 
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { mockCourses, mockModules, mockLessons } from "@/lib/mockData"
+// import { mockCourses, mockModules, mockLessons } from "@/lib/mockData"
+import { getCourseByIdFile } from "@/lib/courseFileStore"
+import { getModulesByCourse, getLessonsByModule } from "@/lib/db"
 
 type Props = {
-  params: { courseId: string }
+  params: Promise<{ courseId: string }>
 }
 
-export default function TeacherLessonsPage({ params }: Props) {
-  const { courseId } = params
+export default async function TeacherLessonsPage({ params }: Props) {
+  const { courseId } = await params
 
-  const course = mockCourses.find(c => c.id === courseId)
-  if (!course) return notFound()
+//   const course = mockCourses.find(c => c.id === courseId)
+    const course = await getCourseByIdFile(courseId)
+    if (!course) return notFound()
 
   // Get modules under this course
-  const modules = mockModules
-    .filter(m => m.courseId === courseId)
-    .sort((a, b) => a.order - b.order)
+  const modules = getModulesByCourse(course.id)
 
   // Get lessons for the course
-  const lessonsByModule = modules.map(module => {
-    const lessons = mockLessons.filter(l => l.moduleId === module.id)
-    return { module, lessons }
-  })
+//   const lessonsByModule = modules.map(module => {
+//     const lessons = mockLessons.filter(l => l.moduleId === module.id)
+//     return { module, lessons }
+//   })
+    const lessonsByModule = modules.map(m => ({
+        module: m,
+        lessons: getLessonsByModule(m.id)
+    }))
 
   return (
     <section className="space-y-6">
@@ -85,7 +90,7 @@ export default function TeacherLessonsPage({ params }: Props) {
 
                       <button
                         className="text-red-600 hover:underline"
-                        onClick={() => alert("Delete (mock)")}
+                        // onClick={() => alert("Delete (mock)")}
                       >
                         Delete
                       </button>

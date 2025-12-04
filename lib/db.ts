@@ -120,6 +120,8 @@ export function deleteLesson(id: string) {
 // QUIZZES
 // ---------------------------------------
 
+
+
 export function getQuizzesByCourse(courseId: string): Quiz[] {
   return quizzes.filter(q => q.courseId === courseId)
 }
