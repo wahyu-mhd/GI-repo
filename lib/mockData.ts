@@ -51,8 +51,11 @@ export type QuizQuestion = {
   id: string
   quizId: string
   questionText: string
-  choices: string[]
-  correctIndex: number
+  type: 'single' | 'multiple' | 'short' | 'long'
+  choices?: string[]
+  correctIndex?: number       // single
+  correctIndices?: number[]   // multiple
+  expectedAnswer?: string     // short/long
 }
 
 export type Quiz = {
@@ -61,6 +64,8 @@ export type Quiz = {
   title: string
   description?: string
 }
+
+
 
 // --- Mock data ---
 
@@ -153,6 +158,7 @@ export const mockQuizQuestions: QuizQuestion[] = [
     id: 'q1',
     quizId: 'quiz-1',
     questionText: 'What is 5 + 7?',
+    type: 'single',
     choices: ['10', '11', '12', '13'],
     correctIndex: 2,
   },
@@ -160,6 +166,7 @@ export const mockQuizQuestions: QuizQuestion[] = [
     id: 'q2',
     quizId: 'quiz-1',
     questionText: 'What is 9 + 3?',
+    type: 'single',
     choices: ['11', '12', '13', '14'],
     correctIndex: 1,
   },

@@ -55,7 +55,47 @@ export default function QuizPage({ params }: Props) {
       </div>
 
       <div className="space-y-4">
-        {questions.map((q, qIndex) => (
+        {questions.map((q, qIndex) => {
+          if (!q.choices) return null
+
+          return (
+            <div
+              key={q.id}
+              className="rounded-lg border bg-white p-4 space-y-2"
+            >
+              <p className="font-medium text-sm">
+                {qIndex + 1}. {q.questionText}
+              </p>
+              <div className="space-y-1">
+                {q.choices.map((choice, cIndex) => {
+                  const isSelected = answers[qIndex] === cIndex
+                  const isCorrect = submitted && cIndex === q.correctIndex
+                  const isWrong = submitted && isSelected && cIndex !== q.correctIndex
+
+                  return (
+                    <button
+                      key={cIndex}
+                      type="button"
+                      onClick={() => handleSelect(qIndex, cIndex)}
+                      className={[
+                        'block w-full text-left rounded border px-3 py-2 text-sm',
+                        isSelected ? 'border-blue-500' : 'border-slate-200',
+                        isCorrect ? 'bg-green-50 border-green-500' : '',
+                        isWrong ? 'bg-red-50 border-red-500' : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                    >
+                      {choice}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })}
+
+        {/* {questions.map((q, qIndex) => (
           <div
             key={q.id}
             className="rounded-lg border bg-white p-4 space-y-2"
@@ -66,12 +106,8 @@ export default function QuizPage({ params }: Props) {
             <div className="space-y-1">
               {q.choices.map((choice, cIndex) => {
                 const isSelected = answers[qIndex] === cIndex
-                const isCorrect =
-                  submitted && cIndex === q.correctIndex
-                const isWrong =
-                  submitted &&
-                  isSelected &&
-                  cIndex !== q.correctIndex
+                const isCorrect = submitted && cIndex === q.correctIndex
+                const isWrong =submitted && isSelected && cIndex !== q.correctIndex
 
                 return (
                   <button
@@ -93,7 +129,7 @@ export default function QuizPage({ params }: Props) {
               })}
             </div>
           </div>
-        ))}
+        ))} */}
       </div>
 
       {!submitted ? (
