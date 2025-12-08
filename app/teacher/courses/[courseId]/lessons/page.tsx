@@ -4,7 +4,10 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 // import { mockCourses, mockModules, mockLessons } from "@/lib/mockData"
 import { getCourseByIdFile } from "@/lib/courseFileStore"
-import { getModulesByCourse, getLessonsByModule } from "@/lib/db"
+import { getLessonsByModuleFile, getModulesByCourseFile } from "@/lib/moduleLessonFileStore"
+import { LessonContent } from "@/components/lesson/LessonContent"
+
+export const dynamic = 'force-dynamic'
 
 type Props = {
   params: Promise<{ courseId: string }>
@@ -18,17 +21,19 @@ export default async function TeacherLessonsPage({ params }: Props) {
     if (!course) return notFound()
 
   // Get modules under this course
-  const modules = getModulesByCourse(course.id)
+  const modules = await getModulesByCourseFile(course.id)
 
   // Get lessons for the course
 //   const lessonsByModule = modules.map(module => {
 //     const lessons = mockLessons.filter(l => l.moduleId === module.id)
 //     return { module, lessons }
 //   })
-    const lessonsByModule = modules.map(m => ({
+    const lessonsByModule = await Promise.all(
+      modules.map(async m => ({
         module: m,
-        lessons: getLessonsByModule(m.id)
-    }))
+        lessons: await getLessonsByModuleFile(m.id)
+      }))
+    )
 
   return (
     <section className="space-y-6">
@@ -69,31 +74,30 @@ export default async function TeacherLessonsPage({ params }: Props) {
             ) : (
               <div className="space-y-3">
                 {lessons.map(lesson => (
-                  <div
+                    <div
                     key={lesson.id}
-                    className="flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm"
+                    className="flex flex-col gap-3 rounded-lg border bg-white p-4 shadow-sm"
                   >
-                    <div>
-                      <h3 className="font-medium">{lesson.title}</h3>
-                      <p className="text-xs text-slate-500 line-clamp-2 max-w-md">
-                        {lesson.content}
-                      </p>
-                    </div>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="font-medium">{lesson.title}</h3>
+                        <p className="text-xs text-slate-500">Module: {module.title}</p>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <Link
+                          href={`/teacher/courses/${courseId}/lessons/${lesson.id}/edit`}
+                          className="text-blue-600 hover:underline"
+                        >
+                          Edit
+                        </Link>
 
-                    <div className="flex items-center gap-3 text-sm">
-                      <Link
-                        href={`/teacher/courses/${courseId}/lessons/${lesson.id}/edit`}
-                        className="text-blue-600 hover:underline"
-                      >
-                        Edit
-                      </Link>
-
-                      <button
-                        className="text-red-600 hover:underline"
-                        // onClick={() => alert("Delete (mock)")}
-                      >
-                        Delete
-                      </button>
+                        <button
+                          className="text-red-600 hover:underline"
+                          // onClick={() => alert("Delete (mock)")}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}

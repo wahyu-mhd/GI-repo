@@ -2,15 +2,15 @@
 
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { mockCourses } from '@/lib/mockData'
-import { getQuizzesByCourse } from '@/lib/db'
+import { getQuizzesByCourseFile } from '@/lib/quizFileStore'
 import { getCourseByIdFile } from '@/lib/courseFileStore'
+import { DeleteQuizButton } from '@/components/teacher/DeleteQuizButton'
 
 export default async function TeacherQuizzesPage({params}: {params: Promise<{ courseId: string }>}){
     const { courseId } = await params
     const course = await getCourseByIdFile(courseId)
     if (!course) return notFound()
-    const quizzes = getQuizzesByCourse(course.id)
+    const quizzes = await getQuizzesByCourseFile(course.id)
     return(
         <section className='space y-4'>
             <header className='flex items-center justify-between'>
@@ -44,11 +44,14 @@ export default async function TeacherQuizzesPage({params}: {params: Promise<{ co
                                 </p>
                             )}
                         </div>
-                        <div className='flex gap-3 text-xs'>
-                            {/*print view, edit*/}
+                        <div className='flex gap-3 text-xs items-center'>
+                            <Link href={`/teacher/courses/${course.id}/quizzes/${q.id}/edit`} className='text-blue-600 hover:underline'>
+                                Edit
+                            </Link>
                             <Link href={`/teacher/courses/${course.id}/quizzes/${q.id}/print`} className='text-blue-600 hover:underline'>
                                 View / Print
                             </Link>
+                            <DeleteQuizButton quizId={q.id} />
                         </div>
 
                     </div>

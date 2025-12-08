@@ -1,0 +1,20 @@
+[
+  {
+    "to": "robokeycopz@gmail.com",
+    "subject": "Welcome to Parents LMS",
+    "text": "Hi testing,\n\nAn account has been created for you as a teacher.\nDefault password: student_691863\n\nLog in with your email and this password, then change it right away from your profile/settings page.",
+    "sentAt": "2025-12-07T15:36:07.164Z"
+  },
+  {
+    "to": "baguswahyu060706@gmail.com",
+    "subject": "Welcome to Parents LMS",
+    "text": "Hi bimbim,\n\nAn account has been created for you as a student.\nDefault password: student_215816\n\nLog in with your email and this password, then change it right away from your profile/settings page.",
+    "sentAt": "2025-12-07T15:42:00.237Z"
+  },
+  {
+    "to": "apart1@apt.com",
+    "subject": "Welcome to Parents LMS",
+    "text": "Hi tahoe,\n\nAn account has been created for you as a teacher.\nDefault password: teacher_295924\n\nLog in with your email and this password, then change it right away from your profile/settings page.",
+    "sentAt": "2025-12-07T15:44:03.704Z"
+  }
+]

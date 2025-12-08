@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Course } from '@/lib/mockData'
+import { loadMockSession } from '@/lib/sessionMock'
 
 const currentTeacherName = 'Wahyu'
 
@@ -28,7 +29,13 @@ export default function TeacherCoursesPage() {
     load()
   }, [])
 
-  const myCourses = courses.filter((c) => c.teacherName === currentTeacherName)
+  const session = loadMockSession()
+  const isSuperuser = session?.role === 'superuser'
+  const teacherName = session?.name ?? currentTeacherName
+
+  const myCourses = isSuperuser
+    ? courses
+    : courses.filter((c) => c.teacherName === teacherName)
 
   return (
     <section className="space-y-4">
@@ -36,7 +43,8 @@ export default function TeacherCoursesPage() {
         <div>
           <h1 className="text-2xl font-bold">My Courses</h1>
           <p className="text-sm text-slate-600">
-            Logged in as: {currentTeacherName} (mock)
+            Logged in as: {teacherName} (mock){' '}
+            {isSuperuser && <span className="text-green-600">(Superuser)</span>}
           </p>
         </div>
         <Link

@@ -1,18 +1,29 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { mockCourses, mockLessons, mockModules } from '@/lib/mockData'
+import { getCourseByIdFile } from '@/lib/courseFileStore'
+import {
+  getLessonByIdFile,
+  getModuleByIdFile,
+  getModulesByCourseFile,
+} from '@/lib/moduleLessonFileStore'
+import { LessonContent } from '@/components/lesson/LessonContent'
 
 type Props = {
-  params: { courseId: string; lessonId: string }
+  params: { courseId: string; lessonId: string } | Promise<{ courseId: string; lessonId: string }>
 }
 
-export default function LessonPage({ params }: Props) {
-  const course = mockCourses.find(c => c.id === params.courseId)
-  const lesson = mockLessons.find(l => l.id === params.lessonId)
+export default async function LessonPage({ params }: Props) {
+  // Support both plain params and promise-wrapped params (Turbopack can pass a thenable)
+  const { courseId, lessonId } = await Promise.resolve(params)
+  const course = await getCourseByIdFile(courseId)
+  const lesson = await getLessonByIdFile(lessonId)
 
   if (!course || !lesson) return notFound()
 
-  const module = mockModules.find(m => m.id === lesson.moduleId)
+  const modules = await getModulesByCourseFile(courseId)
+  const module = lesson.moduleId ? await getModuleByIdFile(lesson.moduleId) : undefined
+  const belongsToCourse = modules.some(m => m.id === lesson.moduleId)
+  if (!belongsToCourse) return notFound()
 
   return (
     <article className="space-y-4">
@@ -22,12 +33,12 @@ export default function LessonPage({ params }: Props) {
             href={`/student/courses/${course.id}`}
             className="text-xs text-blue-600 hover:underline"
           >
-            ← Back to course
+            Back to course
           </Link>
           <h1 className="mt-1 text-2xl font-bold">{lesson.title}</h1>
           {module && (
             <p className="text-xs text-slate-500">
-              Course: {course.title} · Module: {module.title}
+              Course: {course.title} | Module: {module.title}
             </p>
           )}
         </div>
@@ -44,9 +55,7 @@ export default function LessonPage({ params }: Props) {
       )}
 
       <div className="rounded-lg border bg-white p-4">
-        <p className="whitespace-pre-line text-sm text-slate-800">
-          {lesson.content}
-        </p>
+        <LessonContent content={lesson.content} />
       </div>
 
       {lesson.pdfUrl && (

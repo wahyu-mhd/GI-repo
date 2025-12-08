@@ -1,0 +1,58 @@
+[
+  {
+    "id": "lesson-1",
+    "moduleId": "module-1",
+    "title": "Adding 1-2 Digit Numbers",
+    "content": "In this lesson, we practice adding 1-2 digit numbers with examples.",
+    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "pdfUrl": "/sample/addition-practice.pdf"
+  },
+  {
+    "id": "lesson-2",
+    "moduleId": "module-1",
+    "title": "Subtracting 1-2 Digit Numbers",
+    "content": "Now we practice subtraction using number lines and examples."
+  },
+  {
+    "id": "lesson-3",
+    "moduleId": "module-3",
+    "title": "Basic Greetings",
+    "content": "Hello, Hi, Good morning, Good afternoon, Good evening."
+  },
+  {
+    "id": "lesson-4",
+    "moduleId": "module-4",
+    "title": "What is Velocity?",
+    "content": "We define displacement, time, and velocity with simple examples."
+  },
+  {
+    "id": "lesson-1765012604198-4",
+    "moduleId": "module-1765012604195-4",
+    "title": "ertyu haha",
+    "content": "{\"root\":{\"children\":[{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"wedfghj\",\"type\":\"text\",\"version\":1}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"paragraph\",\"version\":1,\"textFormat\":0,\"textStyle\":\"\"}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"root\",\"version\":1}}"
+  },
+  {
+    "id": "lesson-1765017476864-5",
+    "moduleId": "module-1765017476861-5",
+    "title": "hi",
+    "content": "{\"root\":{\"children\":[{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"font-family: Times New Roman;\",\"text\":\"gubu\\\\\\\\\",\"type\":\"text\",\"version\":1}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"paragraph\",\"version\":1,\"textStyle\":\"font-family: Times New Roman;\",\"textFormat\":0}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"root\",\"version\":1,\"textStyle\":\"font-family: Times New Roman;\"}}"
+  },
+  {
+    "id": "lesson-1765019506118-6",
+    "moduleId": "module-1765019506116-6",
+    "title": "titleeee",
+    "content": "{\"root\":{\"children\":[{\"children\":[{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"testing \",\"type\":\"text\",\"version\":1}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"link\",\"version\":1,\"rel\":\"noreferrer\",\"target\":null,\"title\":null,\"url\":\"https://youtu.be/dOgy3CnTSNU?si=SeUkb20zgDMFhukv\"},{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"https://youtu.be/dOgy3CnTSNU?si=SeUkb20zgDMFhukv\",\"type\":\"text\",\"version\":1}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"autolink\",\"version\":1,\"rel\":null,\"target\":null,\"title\":null,\"url\":\"https://youtu.be/dOgy3CnTSNU?si=SeUkb20zgDMFhukv\",\"isUnlinked\":false}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"paragraph\",\"version\":1,\"textFormat\":0,\"textStyle\":\"\"},{\"children\":[{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"apple\",\"type\":\"text\",\"version\":1}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"link\",\"version\":1,\"rel\":\"noreferrer\",\"target\":null,\"title\":null,\"url\":\"https://share.google/images/VNtx8g0Big1wcxdsz\"},{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\" : \",\"type\":\"text\",\"version\":1},{\"children\":[{\"detail\":0,\"format\":1,\"mode\":\"normal\",\"style\":\"\",\"text\":\"https://share.google/images/VNtx8g0Big1wcxdsz\",\"type\":\"text\",\"version\":1}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"autolink\",\"version\":1,\"textFormat\":1,\"rel\":null,\"target\":null,\"title\":null,\"url\":\"https://share.google/images/VNtx8g0Big1wcxdsz\",\"isUnlinked\":false}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"paragraph\",\"version\":1,\"textFormat\":1,\"textStyle\":\"\"},{\"children\":[],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"paragraph\",\"version\":1,\"textFormat\":1,\"textStyle\":\"\"},{\"children\":[{\"detail\":0,\"format\":1,\"mode\":\"normal\",\"style\":\"\",\"text\":\"Hi\",\"type\":\"text\",\"version\":1}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"heading\",\"version\":1,\"textFormat\":1,\"tag\":\"h2\"},{\"children\":[{\"detail\":0,\"format\":1,\"mode\":\"normal\",\"style\":\"\",\"text\":\"lets say\",\"type\":\"text\",\"version\":1}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"paragraph\",\"version\":1,\"textFormat\":1,\"textStyle\":\"\"},{\"children\":[{\"children\":[{\"detail\":0,\"format\":1,\"mode\":\"normal\",\"style\":\"\",\"text\":\"import type { JSX } from 'react'\",\"type\":\"text\",\"version\":1}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"listitem\",\"version\":1,\"textFormat\":1,\"value\":1}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"list\",\"version\":1,\"listType\":\"bullet\",\"start\":1,\"tag\":\"ul\"}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"root\",\"version\":1,\"textFormat\":1}}"
+  },
+  {
+    "id": "lesson-1765118579771-7",
+    "moduleId": "module-1765118579739-7",
+    "title": "SPeed",
+    "content": "{\"root\":{\"children\":[{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"test\",\"type\":\"text\",\"version\":1}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"paragraph\",\"version\":1,\"textFormat\":0,\"textStyle\":\"\"}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"root\",\"version\":1}}"
+  },
+  {
+    "id": "lesson-1765177157542-8",
+    "moduleId": "module-1765177157539-8",
+    "title": "testing leasson",
+    "content": "{\"root\":{\"children\":[{\"children\":[{\"detail\":0,\"format\":1,\"mode\":\"normal\",\"style\":\"\",\"text\":\"lesson test\",\"type\":\"text\",\"version\":1}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"paragraph\",\"version\":1,\"textFormat\":1,\"textStyle\":\"\"}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"root\",\"version\":1,\"textFormat\":1}}"
+  }
+]

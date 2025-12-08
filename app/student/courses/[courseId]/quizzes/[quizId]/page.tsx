@@ -1,26 +1,84 @@
 'use client'
 
-import { useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { mockCourses, mockQuizzes, mockQuizQuestions } from '@/lib/mockData'
+import type { Course, Quiz } from '@/lib/mockData'
 
-type Props = {
-  params: { courseId: string; quizId: string }
+type Params = { courseId: string; quizId: string } | Promise<{ courseId: string; quizId: string }>
+type Props = { params: Params }
+
+type QuizQuestion = {
+  id: string
+  quizId: string
+  questionText: string
+  type: 'single' | 'multiple' | 'short' | 'long'
+  choices?: string[]
+  correctIndex?: number
+  correctPoints?: number
+  wrongPoints?: number
+  skipPoints?: number
+}
+
+function unwrapParams(params: Params) {
+  if (params && typeof (params as any).then === 'function') {
+    return use(params as Promise<{ courseId: string; quizId: string }>)
+  }
+  return params as { courseId: string; quizId: string }
 }
 
 export default function QuizPage({ params }: Props) {
-  const course = mockCourses.find(c => c.id === params.courseId)
-  const quiz = mockQuizzes.find(q => q.id === params.quizId)
+  const { courseId, quizId } = unwrapParams(params)
+  const [course, setCourse] = useState<Course | null>(null)
+  const [quiz, setQuiz] = useState<Quiz | null>(null)
+  const [questions, setQuestions] = useState<QuizQuestion[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  if (!course || !quiz) return notFound()
-
-  const questions = mockQuizQuestions.filter(q => q.quizId === quiz.id)
-
-  const [answers, setAnswers] = useState<(number | null)[]>(
-    questions.map(() => null)
-  )
+  const [answers, setAnswers] = useState<(number | null)[]>([])
   const [submitted, setSubmitted] = useState(false)
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const [courseRes, quizRes] = await Promise.all([
+          fetch(`/api/courses/${courseId}`, { cache: 'no-store' }),
+          fetch(`/api/quizzes/${quizId}`, { cache: 'no-store' }),
+        ])
+        if (courseRes.status === 404 || quizRes.status === 404) {
+          setError('Quiz not found.')
+          return
+        }
+        if (!courseRes.ok || !quizRes.ok) throw new Error('Failed to load quiz')
+        const courseData = (await courseRes.json()) as Course
+        const quizData = await quizRes.json()
+        setCourse(courseData)
+        setQuiz(quizData.quiz ?? quizData)
+        const qs: QuizQuestion[] = (quizData.questions ?? []).map((q: QuizQuestion) => ({
+          ...q,
+          correctPoints: q.correctPoints ?? 1,
+          wrongPoints: q.wrongPoints ?? 0,
+          skipPoints: q.skipPoints ?? 0,
+        }))
+        setQuestions(qs)
+        setAnswers(qs.map(() => null))
+      } catch (err) {
+        console.error(err)
+        setError('Could not load quiz.')
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [courseId, quizId])
+
+  if (loading) {
+    return <p className="text-sm text-slate-500">Loading quiz...</p>
+  }
+
+  if (error || !course || !quiz) return notFound()
 
   const handleSelect = (qIndex: number, choiceIndex: number) => {
     if (submitted) return
@@ -31,13 +89,26 @@ export default function QuizPage({ params }: Props) {
     setSubmitted(true)
   }
 
-  const score =
-    submitted
-      ? questions.reduce((acc, q, idx) => {
-          if (answers[idx] === q.correctIndex) return acc + 1
-          return acc
-        }, 0)
-      : null
+  const scoreSummary = submitted
+    ? questions.reduce(
+        (acc, q, idx) => {
+          const answered = answers[idx]
+          const correctPoints = q.correctPoints ?? 1
+          const wrongPoints = q.wrongPoints ?? 0
+          const skipPoints = q.skipPoints ?? 0
+          const possible = acc.possible + correctPoints
+          if (answered === null || answered === undefined) {
+            return { earned: acc.earned + skipPoints, possible }
+          }
+          const isCorrect = answered === q.correctIndex
+          return {
+            earned: acc.earned + (isCorrect ? correctPoints : wrongPoints),
+            possible,
+          }
+        },
+        { earned: 0, possible: 0 }
+      )
+    : null
 
   return (
     <section className="space-y-4">
@@ -46,7 +117,7 @@ export default function QuizPage({ params }: Props) {
           href={`/student/courses/${course.id}`}
           className="text-xs text-blue-600 hover:underline"
         >
-          ← Back to course
+          Back to course
         </Link>
         <h1 className="mt-1 text-2xl font-bold">{quiz.title}</h1>
         {quiz.description && (
@@ -142,7 +213,7 @@ export default function QuizPage({ params }: Props) {
         </button>
       ) : (
         <p className="text-sm font-semibold">
-          Your score: {score} / {questions.length}
+          Your score: {scoreSummary?.earned ?? 0} / {scoreSummary?.possible ?? 0}
         </p>
       )}
     </section>

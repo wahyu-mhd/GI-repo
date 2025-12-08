@@ -18,8 +18,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               Global Indo
             </Link>
             <div className="flex gap-4 text-sm">
-              <Link href="/student/courses">Student</Link>
-              <Link href="/teacher/courses">Teacher</Link>
+              {/* <Link href="/student/courses">Student</Link>
+              <Link href="/teacher/courses">Teacher</Link> */}
             </div>
           </nav>
         </header>

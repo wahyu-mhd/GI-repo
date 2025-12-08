@@ -1,0 +1,56 @@
+[
+  {
+    "id": "module-1",
+    "courseId": "course-1",
+    "title": "Addition & Subtraction",
+    "order": 1
+  },
+  {
+    "id": "module-2",
+    "courseId": "course-1",
+    "title": "Word Problems",
+    "order": 2
+  },
+  {
+    "id": "module-3",
+    "courseId": "course-2",
+    "title": "Greetings & Introductions",
+    "order": 1
+  },
+  {
+    "id": "module-4",
+    "courseId": "course-4",
+    "title": "Kinematics Basics",
+    "order": 1
+  },
+  {
+    "id": "module-1765012604195-4",
+    "courseId": "course-1764669307045",
+    "title": "General",
+    "order": 1
+  },
+  {
+    "id": "module-1765017476861-5",
+    "courseId": "course-1764669307045",
+    "title": "General",
+    "order": 2
+  },
+  {
+    "id": "module-1765019506116-6",
+    "courseId": "course-1764669307045",
+    "title": "General",
+    "order": 3
+  },
+  {
+    "id": "module-1765118579739-7",
+    "courseId": "course-1765008333472",
+    "title": "General",
+    "order": 1
+  },
+  {
+    "id": "module-1765177157539-8",
+    "courseId": "course-1764669321956",
+    "title": "General",
+    "order": 1
+  }
+]

@@ -1,0 +1,23 @@
+[
+  {
+    "id": "announcement-comment-1",
+    "announcementId": "announcement-1",
+    "authorName": "Student A",
+    "message": "Thank you for the update!",
+    "createdAt": "2024-04-17T03:00:00.000Z"
+  },
+  {
+    "id": "announcement-comment-2",
+    "announcementId": "announcement-1",
+    "authorName": "Student B",
+    "message": "Noted, I will check it out.",
+    "createdAt": "2024-04-17T05:12:00.000Z"
+  },
+  {
+    "id": "announcement-comment-1765083649455-2",
+    "createdAt": "2025-12-07T05:00:49.455Z",
+    "announcementId": "announcement-1",
+    "authorName": "Wahyu",
+    "message": "testing"
+  }
+]

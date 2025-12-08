@@ -1,0 +1,52 @@
+[
+  {
+    "id": "user-super-1",
+    "name": "Super Admin",
+    "role": "superuser",
+    "email": "super@example.com",
+    "canManageStudents": true
+  },
+  {
+    "id": "user-teacher-1",
+    "name": "Wahyu",
+    "role": "teacher",
+    "email": "wahyu@example.com",
+    "canManageStudents": false
+  },
+  {
+    "id": "user-teacher-2",
+    "name": "Mahendra",
+    "role": "teacher",
+    "email": "mahendra@example.com",
+    "canManageStudents": true
+  },
+  {
+    "id": "user-student-1",
+    "name": "Student User",
+    "role": "student",
+    "email": "student@example.com"
+  },
+  {
+    "id": "user-1765121767160-4",
+    "name": "testing",
+    "email": "robokeycopz@gmail.com",
+    "role": "teacher",
+    "canManageStudents": false,
+    "tempPassword": "student_691863"
+  },
+  {
+    "id": "user-1765122120235-5",
+    "name": "bimbim",
+    "email": "baguswahyu060706@gmail.com",
+    "role": "student",
+    "tempPassword": "student_215816"
+  },
+  {
+    "id": "user-1765122243701-6",
+    "name": "tahoe",
+    "email": "apart1@apt.com",
+    "role": "teacher",
+    "canManageStudents": false,
+    "tempPassword": "teacher_295924"
+  }
+]

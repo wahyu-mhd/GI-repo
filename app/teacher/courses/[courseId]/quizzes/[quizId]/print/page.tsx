@@ -1,20 +1,83 @@
 import { notFound } from 'next/navigation'
 import { getCourseByIdFile } from '@/lib/courseFileStore'
-import { getQuizById } from '@/lib/db'
+import {
+  getQuizByIdFile,
+  getQuestionsByQuizFile,
+} from '@/lib/quizFileStore'
+import { PrintButton } from '@/components/teacher/PrintButton'
+
+function lexicalJsonToPlainText(raw: string | undefined): string {
+  if (!raw) return ''
+  try {
+    const parsed = JSON.parse(raw) as { root?: { children?: any[] } }
+    const visit = (node: any): string => {
+      if (!node) return ''
+      if (typeof node.text === 'string') return node.text
+      if (Array.isArray(node.children)) return node.children.map(visit).join('')
+      return ''
+    }
+    const rootChildren = parsed.root?.children ?? []
+    return rootChildren.map(visit).join('\n').trim()
+  } catch {
+    return raw
+  }
+}
 
 export default async function QuizPrintPage({
   params,
 }: { params: Promise<{ courseId: string; quizId: string }> }) {
   const { courseId, quizId } = await params
   const course = await getCourseByIdFile(courseId)
-  const quiz = getQuizById(quizId)
+  const quiz = await getQuizByIdFile(quizId)
   if (!course || !quiz || quiz.courseId !== courseId) return notFound()
+  const questions = await getQuestionsByQuizFile(quizId)
 
   return (
     <section className="space-y-4">
-      <h1 className="text-xl font-bold">{quiz.title}</h1>
-      <p className="text-sm text-slate-600">Course: {course.title}</p>
-      {/* render questions here */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold">{quiz.title}</h1>
+          <p className="text-sm text-slate-600">Course: {course.title}</p>
+          {quiz.description && (
+            <p className="text-sm text-slate-700 mt-1">{quiz.description}</p>
+          )}
+        </div>
+        <PrintButton />
+      </div>
+
+      {questions.length === 0 ? (
+        <p className="text-sm text-slate-500">No questions for this quiz yet.</p>
+      ) : (
+        <ol className="space-y-4 list-decimal pl-4">
+          {questions.map((q, idx) => (
+            <li key={q.id} className="space-y-2">
+              <div className="font-medium whitespace-pre-wrap">
+                {lexicalJsonToPlainText(q.questionText)}
+              </div>
+              {q.type === 'single' || q.type === 'multiple' ? (
+                <ul className="space-y-1 list-disc pl-5 text-sm">
+                  {(q.choices ?? []).map((choice, cIdx) => {
+                    const isCorrect =
+                      q.type === 'single'
+                        ? q.correctIndex === cIdx
+                        : q.correctIndices?.includes(cIdx)
+                  return (
+                    <li key={cIdx} className={isCorrect ? 'font-semibold' : ''}>
+                      {choice}
+                      {isCorrect ? ' (correct)' : ''}
+                    </li>
+                  )
+                  })}
+                </ul>
+              ) : (
+                <p className="text-sm text-slate-600">
+                  Expected answer: {q.expectedAnswer || '—'}
+                </p>
+              )}
+            </li>
+          ))}
+        </ol>
+      )}
     </section>
   )
 }

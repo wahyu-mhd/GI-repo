@@ -29,6 +29,31 @@ export async function writeCourses(courses: Course[]): Promise<void> {
   await fs.writeFile(filePath, JSON.stringify(courses, null, 2), 'utf8')
 }
 
+export async function updateCourseFile(
+  id: string,
+  patch: Partial<Omit<Course, 'id'>>
+): Promise<Course | undefined> {
+  const courses = await readCourses()
+  let updated: Course | undefined
+  const next = courses.map(c => {
+    if (c.id !== id) return c
+    updated = { ...c, ...patch }
+    return updated
+  })
+  if (!updated) return undefined
+  await writeCourses(next)
+  return updated
+}
+
+export async function deleteCourse(id: string): Promise<boolean> {
+  const courses = await readCourses()
+  const exists = courses.some(c => c.id === id)
+  if (!exists) return false
+  const remaining = courses.filter(c => c.id !== id)
+  await writeCourses(remaining)
+  return true
+}
+
 export async function addCourse(data: Omit<Course, 'id'>): Promise<Course> {
   const courses = await readCourses()
   const newCourse: Course = { id: `course-${Date.now()}`, ...data }

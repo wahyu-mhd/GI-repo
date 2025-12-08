@@ -56,6 +56,9 @@ export type QuizQuestion = {
   correctIndex?: number       // single
   correctIndices?: number[]   // multiple
   expectedAnswer?: string     // short/long
+  correctPoints?: number      // points for a correct answer
+  wrongPoints?: number        // points for an incorrect answer
+  skipPoints?: number         // points (likely 0) for unanswered
 }
 
 export type Quiz = {
@@ -63,6 +66,22 @@ export type Quiz = {
   courseId: string
   title: string
   description?: string
+}
+
+export type Announcement = {
+  id: string
+  courseId: string
+  authorName: string
+  message: string
+  createdAt: string
+}
+
+export type AnnouncementComment = {
+  id: string
+  announcementId: string
+  authorName: string
+  message: string
+  createdAt: string
 }
 
 
@@ -161,6 +180,9 @@ export const mockQuizQuestions: QuizQuestion[] = [
     type: 'single',
     choices: ['10', '11', '12', '13'],
     correctIndex: 2,
+    correctPoints: 1,
+    wrongPoints: 0,
+    skipPoints: 0,
   },
   {
     id: 'q2',
@@ -169,5 +191,49 @@ export const mockQuizQuestions: QuizQuestion[] = [
     type: 'single',
     choices: ['11', '12', '13', '14'],
     correctIndex: 1,
+    correctPoints: 1,
+    wrongPoints: 0,
+    skipPoints: 0,
+  },
+]
+
+export const mockAnnouncements: Announcement[] = [
+  {
+    id: 'announcement-1',
+    courseId: 'course-1',
+    authorName: 'Wahyu',
+    message: 'gustira pahlavi memposting materi baru: Progress Test 1 - 17 April',
+    createdAt: '2024-04-17T02:00:00.000Z',
+  },
+  {
+    id: 'announcement-2',
+    courseId: 'course-1',
+    authorName: 'Wahyu',
+    message: 'gustira pahlavi memposting materi baru: Speaking practice',
+    createdAt: '2023-08-21T02:00:00.000Z',
+  },
+  {
+    id: 'announcement-3',
+    courseId: 'course-1',
+    authorName: 'Wahyu',
+    message: 'gustira pahlavi memposting materi baru: Cambridge IELTS 16',
+    createdAt: '2023-08-07T02:00:00.000Z',
+  },
+]
+
+export const mockAnnouncementComments: AnnouncementComment[] = [
+  {
+    id: 'announcement-comment-1',
+    announcementId: 'announcement-1',
+    authorName: 'Student A',
+    message: 'Thank you for the update!',
+    createdAt: '2024-04-17T03:00:00.000Z',
+  },
+  {
+    id: 'announcement-comment-2',
+    announcementId: 'announcement-1',
+    authorName: 'Student B',
+    message: 'Noted, I will check it out.',
+    createdAt: '2024-04-17T05:12:00.000Z',
   },
 ]

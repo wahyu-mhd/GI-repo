@@ -5,6 +5,12 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 // import { mockCourses } from '@/lib/mockData'
 import { getCourseByIdFile } from '@/lib/courseFileStore'
+import { CourseAnnouncements } from '@/components/announcements/CourseAnnouncements'
+import { EditCourseForm } from '@/components/teacher/EditCourseForm'
+
+export const dynamic = 'force-dynamic'
+
+const currentTeacherName = 'Wahyu'
 type Props = {
   params: Promise<{ courseId: string }>
 }
@@ -62,7 +68,14 @@ export default async function TeacherCourseDetailPage({ params }: Props) {
                 </Link>
             </div>
             </div>
+
+            <CourseAnnouncements
+              courseId={course.id}
+              viewerName={currentTeacherName}
+              canCreate
+            />
+
+            <EditCourseForm course={course} />
         </section>
     )
 }
-

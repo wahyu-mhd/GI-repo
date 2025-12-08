@@ -46,8 +46,8 @@
   },
   {
     "id": "course-1764669321956",
-    "title": "eng",
-    "description": "e",
+    "title": "tayo",
+    "description": "eb",
     "teacherName": "Wahyu",
     "stage": "elementary",
     "grade": 9,
@@ -57,6 +57,24 @@
     "id": "course-1764815146341",
     "title": "math",
     "description": "bing",
+    "teacherName": "Wahyu",
+    "stage": "elementary",
+    "grade": 1,
+    "subject": "math"
+  },
+  {
+    "id": "course-1765008333472",
+    "title": "Sains",
+    "description": "desc about force",
+    "teacherName": "Wahyu",
+    "stage": "junior",
+    "grade": 8,
+    "subject": "science"
+  },
+  {
+    "id": "course-1765073862178",
+    "title": "javascript",
+    "description": "cvbhj",
     "teacherName": "Wahyu",
     "stage": "elementary",
     "grade": 1,

@@ -2,10 +2,10 @@
 
 // import katex from 'katex'
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 // import { notFound } from 'next/navigation'
 // import { mockCourses } from '@/lib/mockData'
-import { createQuiz, createQuizQuestion } from '@/lib/db'
+// import { createQuiz, createQuizQuestion } from '@/lib/db'
 import { Course } from '@/lib/mockData'
 // import { promises } from 'dns'
 import { RichTextEditor } from '@/components/editor/RichTextEditor'
@@ -40,6 +40,9 @@ type Question = {
   correctIndex?: number
   correctIndices?: number[]
   expectedAnswer?: string
+  correctPoints?: number
+  wrongPoints?: number
+  skipPoints?: number
 }
 
 type NewQuestion = {
@@ -52,6 +55,24 @@ type FormValues = {
   title: string
   description?: string
   questions: Question[]
+}
+
+function extractPlainText(input: string): string {
+  if (!input) return ''
+  try {
+    const json = JSON.parse(input)
+    const walk = (node: any): string => {
+      if (!node) return ''
+      if (typeof node.text === 'string') return node.text
+      if (Array.isArray(node.children)) {
+        return node.children.map(walk).join(' ')
+      }
+      return ''
+    }
+    return walk(json.root ?? json).trim()
+  } catch {
+    return input
+  }
 }
 
 // function LatexPreview({ value }: { value: string }) {
@@ -70,18 +91,19 @@ type FormValues = {
 
 // const form = useForm<{ title: string; description: string; questions: Question[] }>()
 
-export default function NewQuizPage({params,}: {params: Promise<{ courseId: string }>}){
+export default function NewQuizPage(){
+    const params = useParams<{ courseId: string }>()
+    const courseId = params?.courseId
     const form = useForm<{ title: string; description: string; questions: Question[] }>({
         defaultValues: {
         title: '',
         description: '',
         questions: [
-            { type: 'single', text: '', choices: ['', '', ''], correctIndex: 0, correctIndices: [] },
+            { type: 'single', text: '', choices: ['', '', ''], correctIndex: 0, correctIndices: [], correctPoints: 1, wrongPoints: 0, skipPoints: 0 },
         ],
         },
     })
     const [course, setCourse] = useState<Course | null>(null)
-    const [courseId, setCourseId] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const router = useRouter()
@@ -91,30 +113,53 @@ export default function NewQuizPage({params,}: {params: Promise<{ courseId: stri
     const [description, setDescription] = useState('')
     const [questions, setQuestions] = useState<NewQuestion[]>([{ text: '', choices: ['', '', '', ''], correctIndex: 0 },])
     const [submitting, setSubmitting] = useState(false)
-    const onSubmit = (values: FormValues) => {
-        if (!course) return
-      // do your quiz creation here (createQuiz/createQuizQuestion, then router.push)
-      const quiz = createQuiz({
-        courseId: course.id,          // from your resolved course
-        title: values.title,
-        description: values.description,
-      })
+    // const onSubmit = (values: FormValues) => {
+    //     if (!course) return
+    //   // do quiz creation here (createQuiz/createQuizQuestion, then router.push)
+    //   const quiz = createQuiz({
+    //     courseId: course.id,          // from your resolved course
+    //     title: values.title,
+    //     description: values.description,
+    //   })
     
-      values.questions.forEach(q => {
-        createQuizQuestion({
-            quizId: quiz.id,
-            questionText: q.text,
-            type: q.type,
-            choices: q.choices,
-            correctIndex: q.correctIndex,
-            correctIndices: q.correctIndices,
-            expectedAnswer: q.expectedAnswer,
-        })
+    //   values.questions.forEach(q => {
+    //     createQuizQuestion({
+    //         quizId: quiz.id,
+    //         questionText: q.text,
+    //         type: q.type,
+    //         choices: q.choices,
+    //         correctIndex: q.correctIndex,
+    //         correctIndices: q.correctIndices,
+    //         expectedAnswer: q.expectedAnswer,
+    //     })
 
-      })
+    //   })
     
-      router.push(`/teacher/courses/${course.id}/quizzes`)
+    //   router.push(`/teacher/courses/${course.id}/quizzes`)
+    // }
+    const onSubmit = async (values: FormValues) => {
+      if (!courseId) return
+      setSubmitting(true)
+      setError(null)
+      try {
+        const sanitizedQuestions = (values.questions ?? []).map(q => ({
+          ...q,
+          text: extractPlainText(q.text),
+        }))
+        const res = await fetch(`/api/courses/${courseId}/quizzes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...values, questions: sanitizedQuestions }), // title, description, questions
+        })
+        if (!res.ok) throw new Error('Failed to save quiz')
+        router.push(`/teacher/courses/${courseId}/quizzes`)
+      } catch (e) {
+        setError('Could not save quiz')
+      } finally {
+        setSubmitting(false)
+      }
     }
+
     
     const updateQuestion = (idx: number, patch: Partial<Question>) => {
       const qs = form.getValues('questions').slice()
@@ -126,7 +171,7 @@ export default function NewQuizPage({params,}: {params: Promise<{ courseId: stri
       const qs = form.getValues('questions')
       form.setValue('questions', [
         ...qs,
-        { type: 'single', text: '', choices: ['', '', ''], correctIndex: 0, correctIndices: [], expectedAnswer: '' },
+        { type: 'single', text: '', choices: ['', '', ''], correctIndex: 0, correctIndices: [], expectedAnswer: '', correctPoints: 1, wrongPoints: 0, skipPoints: 0 },
       ], { shouldDirty: true })
     }
     
@@ -170,9 +215,6 @@ export default function NewQuizPage({params,}: {params: Promise<{ courseId: stri
       }
       form.setValue('questions', qs, { shouldDirty: true })
     }
-    useEffect(() => {
-        params.then(({ courseId }) => setCourseId(courseId))
-    }, [params])
 
 
     // useEffect(() => {
@@ -193,7 +235,6 @@ export default function NewQuizPage({params,}: {params: Promise<{ courseId: stri
     // }, [params.courseId])
 
     useEffect(() => {
-        if (!courseId) return
         const load = async () => {
         try {
             const res = await fetch('/api/courses', { cache: 'no-store' })
@@ -209,7 +250,7 @@ export default function NewQuizPage({params,}: {params: Promise<{ courseId: stri
         load()
     }, [courseId])
 
-    if (loading || !courseId) return <p> loading....</p>
+    if (loading) return <p> loading....</p>
     if (error) return <p>{error}</p>
     if (!course) return <p>Course not found.</p>
 
@@ -391,13 +432,13 @@ export default function NewQuizPage({params,}: {params: Promise<{ courseId: stri
                         <SelectItem value="long">Long Answer</SelectItem>
                         </SelectContent>
                     </Select>
-                    </div>
+                </div>
 
-                    <RichTextEditor
-                        value={q.text}
-                        onChange={val => updateQuestion(idx, { text: val })}
-                        placeholder="Question prompt"
-                        />
+                <RichTextEditor
+                    value={q.text}
+                    onChange={val => updateQuestion(idx, { text: val })}
+                    placeholder="Question prompt"
+                    />
                     {/* <RichTextEditor value={q.text} onChange={val => updateQuestion(idx, { text: val })} /> */}
 
                     
@@ -433,14 +474,41 @@ export default function NewQuizPage({params,}: {params: Promise<{ courseId: stri
                         </div>
                         ))}
                         <Button type="button" variant="outline" onClick={() => addChoice(idx)}>+ Add option</Button>
-                    </div>
-                    )}
+                </div>
+                )}
 
-                    {(q.type === 'short' || q.type === 'long') && (
-                    <Textarea
-                        rows={q.type === 'short' ? 2 : 4}
-                        value={q.expectedAnswer ?? ''}
-                        onChange={e => updateQuestion(idx, { expectedAnswer: e.target.value })}
+                <div className="grid gap-3 md:grid-cols-3">
+                  <div className="space-y-1">
+                    <FormLabel>Points for correct</FormLabel>
+                    <Input
+                      type="number"
+                      value={q.correctPoints ?? 1}
+                      onChange={e => updateQuestion(idx, { correctPoints: Number(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <FormLabel>Points for wrong</FormLabel>
+                    <Input
+                      type="number"
+                      value={q.wrongPoints ?? 0}
+                      onChange={e => updateQuestion(idx, { wrongPoints: Number(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <FormLabel>Points for no answer</FormLabel>
+                    <Input
+                      type="number"
+                      value={q.skipPoints ?? 0}
+                      onChange={e => updateQuestion(idx, { skipPoints: Number(e.target.value) || 0 })}
+                    />
+                  </div>
+                </div>
+
+                {(q.type === 'short' || q.type === 'long') && (
+                <Textarea
+                    rows={q.type === 'short' ? 2 : 4}
+                    value={q.expectedAnswer ?? ''}
+                    onChange={e => updateQuestion(idx, { expectedAnswer: e.target.value })}
                         placeholder="Expected answer (optional)"
                     />
                     )}

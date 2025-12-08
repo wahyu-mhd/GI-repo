@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server'
-import { getModulesByCourse } from '@/lib/db'
+import { getModulesByCourseFile } from '@/lib/moduleLessonFileStore'
 
 export const runtime = 'nodejs'
 
-export async function GET(_: Request, { params }: { params: { courseId: string } }) {
-  return NextResponse.json(getModulesByCourse(params.courseId))
+export async function GET(
+  _req: Request,
+  { params }: { params: Promise<{ courseId: string }> }
+) {
+  const { courseId } = await params
+  const modules = await getModulesByCourseFile(courseId)
+  return NextResponse.json(modules)
 }
