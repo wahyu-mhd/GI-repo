@@ -3,7 +3,8 @@
     "id": "quiz-1",
     "courseId": "course-1",
     "title": "Addition Quiz 1",
-    "description": "Check your understanding of basic addition."
+    "description": "Check your understanding of basic addition.",
+    "maxAttempts": 1
   },
   {
     "id": "quiz-1765006830973",

@@ -1,0 +1,66 @@
+[
+  {
+    "id": "sub-1765291899025",
+    "submittedAt": "2025-12-09T14:51:39.025Z",
+    "studentId": "user-student-1",
+    "quizId": "quiz-1765006830973",
+    "courseId": "course-1",
+    "earned": 0,
+    "possible": 1,
+    "responses": [
+      {
+        "questionId": "qq-1765006830976-3",
+        "questionText": "10 + 15",
+        "type": "single",
+        "selectedIndex": 2,
+        "isCorrect": false,
+        "correctIndex": 0,
+        "correctIndices": [],
+        "choices": [
+          "25",
+          "23",
+          "12"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sub-1765293999466",
+    "submittedAt": "2025-12-09T15:26:39.466Z",
+    "studentId": "user-student-1",
+    "quizId": "quiz-1",
+    "courseId": "course-1",
+    "earned": 3,
+    "possible": 8,
+    "responses": [
+      {
+        "questionId": "q1",
+        "questionText": "What is 5 + 7?",
+        "type": "single",
+        "selectedIndex": 0,
+        "isCorrect": false,
+        "correctIndex": 2,
+        "choices": [
+          "10",
+          "11",
+          "12",
+          "13"
+        ]
+      },
+      {
+        "questionId": "q2",
+        "questionText": "What is 9 + 3?",
+        "type": "single",
+        "selectedIndex": 1,
+        "isCorrect": true,
+        "correctIndex": 1,
+        "choices": [
+          "11",
+          "12",
+          "13",
+          "14"
+        ]
+      }
+    ]
+  }
+]

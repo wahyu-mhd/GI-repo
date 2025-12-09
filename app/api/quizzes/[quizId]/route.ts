@@ -44,18 +44,33 @@ export async function PUT(
     title: string
     description: string
     questions: Array<Partial<UpsertQuizQuestionInput & { text?: string }>>
+    maxAttempts: number | null
   }>
 
   const hasTitle = body.title !== undefined
   const hasDescription = body.description !== undefined
   const hasQuestions = Array.isArray(body.questions)
+  const hasMaxAttempts = body.maxAttempts !== undefined
 
-  if (!hasTitle && !hasDescription && !hasQuestions) {
+  if (!hasTitle && !hasDescription && !hasQuestions && !hasMaxAttempts) {
     return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
   }
 
   if (hasTitle && !body.title?.trim()) {
     return NextResponse.json({ error: 'Title cannot be empty' }, { status: 400 })
+  }
+
+  let nextMaxAttempts: number | undefined | null = undefined
+  if (hasMaxAttempts) {
+    if (body.maxAttempts === null) {
+      nextMaxAttempts = undefined
+    } else {
+      const attempts = Number(body.maxAttempts)
+      if (!Number.isFinite(attempts) || attempts < 1) {
+        return NextResponse.json({ error: 'maxAttempts must be 1 or greater' }, { status: 400 })
+      }
+      nextMaxAttempts = Math.floor(attempts)
+    }
   }
 
   let savedQuestions = await getQuestionsByQuizFile(quizId)
@@ -101,6 +116,7 @@ export async function PUT(
   const updatedQuiz = await updateQuizFile(quizId, {
     title: hasTitle ? body.title?.trim() : existing.title,
     description: hasDescription ? body.description?.trim() : existing.description,
+    maxAttempts: hasMaxAttempts ? nextMaxAttempts ?? undefined : existing.maxAttempts,
   })
 
   if (!updatedQuiz) return NextResponse.json({ error: 'Update failed' }, { status: 500 })

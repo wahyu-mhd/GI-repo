@@ -3,24 +3,11 @@
 import { use, useEffect, useState } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import type { Course, Quiz } from '@/lib/mockData'
+import type { Course, Quiz, QuizQuestion, QuizSubmission } from '@/lib/mockData'
 import { LessonContent } from '@/components/lesson/LessonContent'
 
 type Params = { courseId: string; quizId: string } | Promise<{ courseId: string; quizId: string }>
 type Props = { params: Params }
-
-type QuizQuestion = {
-  id: string
-  quizId: string
-  questionText: string
-  type: 'single' | 'multiple' | 'short' | 'long'
-  choices?: string[]
-  correctIndex?: number
-  explanation?: string
-  correctPoints?: number
-  wrongPoints?: number
-  skipPoints?: number
-}
 
 function unwrapParams(params: Params) {
   if (params && typeof (params as any).then === 'function') {
@@ -31,6 +18,7 @@ function unwrapParams(params: Params) {
 
 export default function QuizPage({ params }: Props) {
   const { courseId, quizId } = unwrapParams(params)
+  const studentId = 'user-student-1'
   const [course, setCourse] = useState<Course | null>(null)
   const [quiz, setQuiz] = useState<Quiz | null>(null)
   const [questions, setQuestions] = useState<QuizQuestion[]>([])
@@ -39,6 +27,9 @@ export default function QuizPage({ params }: Props) {
 
   const [answers, setAnswers] = useState<(number | null)[]>([])
   const [submitted, setSubmitted] = useState(false)
+  const [submission, setSubmission] = useState<QuizSubmission | null>(null)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -88,28 +79,38 @@ export default function QuizPage({ params }: Props) {
   }
 
   const handleSubmit = () => {
-    setSubmitted(true)
+    if (submitted || submitting) return
+    setSubmitting(true)
+    setSubmitError(null)
+    fetch(`/api/students/${studentId}/quizzes/${quizId}/submission`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ answers, courseId }),
+    })
+      .then(async res => {
+        if (!res.ok) {
+          const detail = await res.json().catch(() => null)
+          throw new Error(detail?.error || 'Failed to submit quiz')
+        }
+        return res.json()
+      })
+      .then((saved: QuizSubmission) => {
+        setSubmission(saved)
+        setSubmitted(true)
+      })
+      .catch(err => {
+        console.error(err)
+        const message = err instanceof Error ? err.message : 'Could not submit quiz.'
+        setSubmitError(message)
+        if (typeof window !== 'undefined' && message.toLowerCase().includes('attempt limit')) {
+          window.alert(message)
+        }
+      })
+      .finally(() => setSubmitting(false))
   }
 
-  const scoreSummary = submitted
-    ? questions.reduce(
-        (acc, q, idx) => {
-          const answered = answers[idx]
-          const correctPoints = q.correctPoints ?? 1
-          const wrongPoints = q.wrongPoints ?? 0
-          const skipPoints = q.skipPoints ?? 0
-          const possible = acc.possible + correctPoints
-          if (answered === null || answered === undefined) {
-            return { earned: acc.earned + skipPoints, possible }
-          }
-          const isCorrect = answered === q.correctIndex
-          return {
-            earned: acc.earned + (isCorrect ? correctPoints : wrongPoints),
-            possible,
-          }
-        },
-        { earned: 0, possible: 0 }
-      )
+  const scoreSummary = submission
+    ? { earned: submission.earned, possible: submission.possible }
     : null
 
   return (
@@ -141,9 +142,14 @@ export default function QuizPage({ params }: Props) {
               </p>
               <div className="space-y-1">
                 {q.choices.map((choice, cIndex) => {
-                  const isSelected = answers[qIndex] === cIndex
-                  const isCorrect = submitted && cIndex === q.correctIndex
-                  const isWrong = submitted && isSelected && cIndex !== q.correctIndex
+                  const response = submission?.responses.find(r => r.questionId === q.id)
+                  const selected = response ? response.selectedIndex : answers[qIndex]
+                  const isSelected = selected === cIndex
+                  const isCorrect = submitted && response ? response.isCorrect && cIndex === response.correctIndex : submitted && cIndex === q.correctIndex
+                  const isWrong =
+                    submitted && response
+                      ? !response.isCorrect && isSelected
+                      : submitted && isSelected && cIndex !== q.correctIndex
 
                   return (
                     <button
@@ -216,14 +222,16 @@ export default function QuizPage({ params }: Props) {
           type="button"
           onClick={handleSubmit}
           className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white"
+          disabled={submitting}
         >
-          Submit Quiz
+          {submitting ? 'Submitting...' : 'Submit Quiz'}
         </button>
       ) : (
         <p className="text-sm font-semibold">
           Your score: {scoreSummary?.earned ?? 0} / {scoreSummary?.possible ?? 0}
         </p>
       )}
+      {submitError && <p className="text-xs text-red-600">{submitError}</p>}
     </section>
   )
 }

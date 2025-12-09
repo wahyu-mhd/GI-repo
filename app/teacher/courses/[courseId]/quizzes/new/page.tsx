@@ -56,6 +56,7 @@ type NewQuestion = {
 type FormValues = {
   title: string
   description?: string
+  maxAttempts?: number | ''
   questions: Question[]
 }
 
@@ -97,9 +98,11 @@ export default function NewQuizPage(){
     const params = useParams<{ courseId: string }>()
     const courseId = params?.courseId
     const form = useForm<{ title: string; description: string; questions: Question[] }>({
+    const form = useForm<FormValues>({
         defaultValues: {
         title: '',
         description: '',
+        maxAttempts: '',
         questions: [
             { type: 'single', text: '', explanation: '', choices: ['', '', ''], correctIndex: 0, correctIndices: [], correctPoints: 1, wrongPoints: 0, skipPoints: 0 },
         ],
@@ -162,10 +165,19 @@ export default function NewQuizPage(){
           }
           return base
         })
+        const parsedMaxAttempts =
+          values.maxAttempts === undefined || values.maxAttempts === ''
+            ? undefined
+            : Number(values.maxAttempts)
         const res = await fetch(`/api/courses/${courseId}/quizzes`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...values, questions: sanitizedQuestions }), // title, description, questions
+          body: JSON.stringify({
+            title: values.title,
+            description: values.description,
+            maxAttempts: Number.isFinite(parsedMaxAttempts) ? parsedMaxAttempts : undefined,
+            questions: sanitizedQuestions,
+          }),
         })
         if (!res.ok) throw new Error('Failed to save quiz')
         router.push(`/teacher/courses/${courseId}/quizzes`)
@@ -430,6 +442,21 @@ export default function NewQuizPage(){
                     <FormControl><Textarea rows={2} {...field} /></FormControl>
                     <FormMessage />
                 </FormItem>
+                )} />
+                <FormField name="maxAttempts" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Max attempts (optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={1}
+                        placeholder="Leave blank for unlimited"
+                        value={field.value ?? ''}
+                        onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )} />
                 <div className="rounded border p-3 space-y-2 bg-slate-50">
                   <div className="flex items-center justify-between text-sm">

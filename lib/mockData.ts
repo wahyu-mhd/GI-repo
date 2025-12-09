@@ -68,6 +68,31 @@ export type Quiz = {
   courseId: string
   title: string
   description?: string
+  maxAttempts?: number
+}
+
+export type QuizSubmissionResponse = {
+  questionId: string
+  questionText: string
+  type: QuizQuestion['type']
+  selectedIndex?: number | null
+  selectedIndices?: number[]
+  answerText?: string
+  isCorrect: boolean
+  correctIndex?: number
+  correctIndices?: number[]
+  choices?: string[]
+}
+
+export type QuizSubmission = {
+  id: string
+  studentId: string
+  courseId: string
+  quizId: string
+  submittedAt: string
+  earned: number
+  possible: number
+  responses: QuizSubmissionResponse[]
 }
 
 export type StudentProgress = {
@@ -217,6 +242,8 @@ export const mockQuizQuestions: QuizQuestion[] = [
     skipPoints: 0,
   },
 ]
+
+export const mockQuizSubmissions: QuizSubmission[] = []
 
 export const mockAnnouncements: Announcement[] = [
   {

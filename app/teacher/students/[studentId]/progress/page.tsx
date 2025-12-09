@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { use, useEffect, useMemo, useState } from 'react'
 import type { Course, StudentProgress } from '@/lib/mockData'
 import { Progress } from '@/components/ui/progress'
 import Link from 'next/link'
@@ -122,7 +122,14 @@ export default function TeacherStudentProgressPage({
                 <span>Started: {formatDate(item.startedAt)}</span>
                 <span>Updated: {formatDate(item.updatedAt)}</span>
                 {item.lastLessonId && <span>Last lesson: {item.lastLessonId}</span>}
-                {item.lastQuizId && <span>Last quiz: {item.lastQuizId}</span>}
+                {item.lastQuizId && (
+                  <Link
+                    href={`/teacher/students/${studentId}/quizzes/${item.lastQuizId}`}
+                    className="text-blue-600 hover:underline"
+                  >
+                    Last quiz: {item.lastQuizId}
+                  </Link>
+                )}
               </div>
             </div>
           )

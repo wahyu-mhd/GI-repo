@@ -79,10 +79,10 @@
       "13"
     ],
     "correctIndex": 2,
+    "explanation": "Adding 5 and 7 gives 12. You can also think 7 + 3 = 10, plus 2 more.",
     "correctPoints": 4,
     "wrongPoints": -1,
-    "skipPoints": 0,
-    "explanation": "Adding 5 and 7 gives 12. You can also think 7 + 3 = 10, plus 2 more."
+    "skipPoints": 0
   },
   {
     "id": "q2",
@@ -96,9 +96,9 @@
       "14"
     ],
     "correctIndex": 1,
+    "explanation": "9 + 3 = 12 because 9 needs 1 to reach 10, leaving 2 more.",
     "correctPoints": 4,
     "wrongPoints": -1,
-    "skipPoints": 0,
-    "explanation": "9 + 3 = 12 because 9 needs 1 to reach 10, leaving 2 more."
+    "skipPoints": 0
   }
 ]

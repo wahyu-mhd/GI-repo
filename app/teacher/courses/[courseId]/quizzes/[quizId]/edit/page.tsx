@@ -49,6 +49,7 @@ export default function EditQuizPage({ params }: Props) {
   const [quiz, setQuiz] = useState<Quiz | null>(null)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [maxAttempts, setMaxAttempts] = useState<number | ''>('')
   const [questions, setQuestions] = useState<EditableQuestion[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -70,6 +71,11 @@ export default function EditQuizPage({ params }: Props) {
         setQuiz(loadedQuiz)
         setTitle(loadedQuiz.title ?? '')
         setDescription(loadedQuiz.description ?? '')
+        setMaxAttempts(
+          loadedQuiz.maxAttempts !== undefined && loadedQuiz.maxAttempts !== null
+            ? loadedQuiz.maxAttempts
+            : ''
+        )
         const normalizedQuestions = loadedQuestions.map(q => ({
             id: q.id,
             type: q.type,
@@ -179,9 +185,16 @@ export default function EditQuizPage({ params }: Props) {
     setError(null)
     setSuccess(false)
     try {
+      const parsedMaxAttempts = maxAttempts === '' ? null : Number(maxAttempts)
       const payload = {
         title,
         description,
+        maxAttempts:
+          parsedMaxAttempts === null
+            ? null
+            : Number.isFinite(parsedMaxAttempts)
+            ? parsedMaxAttempts
+            : undefined,
         questions: questions.map(q => {
           const base = {
             id: q.id,
@@ -256,6 +269,17 @@ export default function EditQuizPage({ params }: Props) {
         <div className="space-y-1">
           <label className="text-sm font-medium">Description</label>
           <Textarea rows={3} value={description} onChange={e => setDescription(e.target.value)} />
+        </div>
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Max attempts (optional)</label>
+          <Input
+            type="number"
+            min={1}
+            placeholder="Leave blank for unlimited"
+            value={maxAttempts}
+            onChange={e => setMaxAttempts(e.target.value === '' ? '' : Number(e.target.value))}
+          />
+          <p className="text-xs text-slate-500">Students will be blocked after they reach this number of attempts.</p>
         </div>
         <div className="rounded border p-3 space-y-2 bg-slate-50">
           <div className="flex items-center justify-between text-sm">

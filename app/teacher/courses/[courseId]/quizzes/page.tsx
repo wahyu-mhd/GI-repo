@@ -43,6 +43,9 @@ export default async function TeacherQuizzesPage({params}: {params: Promise<{ co
                                     {q.description}
                                 </p>
                             )}
+                            {q.maxAttempts !== undefined && (
+                                <p className='text-xs text-slate-500 mt-1'>Max attempts: {q.maxAttempts}</p>
+                            )}
                         </div>
                         <div className='flex gap-3 text-xs items-center'>
                             <Link href={`/teacher/courses/${course.id}/quizzes/${q.id}/edit`} className='text-blue-600 hover:underline'>
@@ -50,6 +53,9 @@ export default async function TeacherQuizzesPage({params}: {params: Promise<{ co
                             </Link>
                             <Link href={`/teacher/courses/${course.id}/quizzes/${q.id}/print`} className='text-blue-600 hover:underline'>
                                 View / Print
+                            </Link>
+                            <Link href={`/teacher/courses/${course.id}/quizzes/${q.id}/submissions`} className='text-blue-600 hover:underline'>
+                                Submissions
                             </Link>
                             <DeleteQuizButton quizId={q.id} />
                         </div>

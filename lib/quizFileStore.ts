@@ -1,9 +1,17 @@
 import { promises as fs } from 'fs'
 import path from 'path'
-import { Quiz, QuizQuestion, mockQuizzes, mockQuizQuestions } from './mockData'
+import {
+  Quiz,
+  QuizQuestion,
+  QuizSubmission,
+  mockQuizzes,
+  mockQuizQuestions,
+  mockQuizSubmissions,
+} from './mockData'
 
 const quizzesPath = path.join(process.cwd(), 'data', 'quizzes.json')
 const questionsPath = path.join(process.cwd(), 'data', 'quizQuestions.json')
+const submissionsPath = path.join(process.cwd(), 'data', 'quizSubmissions.json')
 
 async function ensureFile(filePath: string, seed: object[]): Promise<void> {
   try {
@@ -44,6 +52,14 @@ export async function readQuizQuestions(): Promise<QuizQuestion[]> {
 
 export async function writeQuizQuestions(questions: QuizQuestion[]): Promise<void> {
   await writeJson(questionsPath, questions)
+}
+
+export async function readQuizSubmissions(): Promise<QuizSubmission[]> {
+  return readJson<QuizSubmission>(submissionsPath, mockQuizSubmissions)
+}
+
+export async function writeQuizSubmissions(submissions: QuizSubmission[]): Promise<void> {
+  await writeJson(submissionsPath, submissions)
 }
 
 export async function addQuiz(data: Omit<Quiz, 'id'>): Promise<Quiz> {
@@ -132,4 +148,29 @@ export async function deleteQuizFile(id: string): Promise<void> {
   const filteredQuestions = questions.filter(q => q.quizId !== id)
   await writeQuizzes(filteredQuizzes)
   await writeQuizQuestions(filteredQuestions)
+}
+
+export async function getSubmissionByStudentAndQuiz(
+  studentId: string,
+  quizId: string
+): Promise<QuizSubmission | undefined> {
+  const submissions = await readQuizSubmissions()
+  const filtered = submissions.filter(s => s.studentId === studentId && s.quizId === quizId)
+  if (filtered.length === 0) return undefined
+  return filtered.sort(
+    (a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+  )[0]
+}
+
+export async function saveQuizSubmission(
+  data: Omit<QuizSubmission, 'id' | 'submittedAt'> & { id?: string; submittedAt?: string }
+): Promise<QuizSubmission> {
+  const submissions = await readQuizSubmissions()
+  const submission: QuizSubmission = {
+    id: data.id ?? `sub-${Date.now()}`,
+    submittedAt: data.submittedAt ?? new Date().toISOString(),
+    ...data,
+  }
+  await writeQuizSubmissions([...submissions, submission])
+  return submission
 }

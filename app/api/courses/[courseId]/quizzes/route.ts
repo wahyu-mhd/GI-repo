@@ -35,15 +35,25 @@ export async function POST(
       title?: string
       description?: string
       questions?: IncomingQuestion[]
+      maxAttempts?: number
     }
     if (!body.title || !body.questions?.length) {
       return NextResponse.json({ error: 'Missing title or questions' }, { status: 400 })
+    }
+
+    if (body.maxAttempts !== undefined) {
+      const attempts = Number(body.maxAttempts)
+      if (!Number.isFinite(attempts) || attempts < 1) {
+        return NextResponse.json({ error: 'maxAttempts must be 1 or greater' }, { status: 400 })
+      }
+      body.maxAttempts = Math.floor(attempts)
     }
 
     const quiz = await addQuiz({
       courseId: courseId,
       title: body.title,
       description: body.description,
+      maxAttempts: body.maxAttempts,
     })
 
     await Promise.all(
