@@ -97,7 +97,7 @@ function extractPlainText(input: string): string {
 export default function NewQuizPage(){
     const params = useParams<{ courseId: string }>()
     const courseId = params?.courseId
-    const form = useForm<{ title: string; description: string; questions: Question[] }>({
+    // const form = useForm<{ title: string; description: string; questions: Question[] }>({
     const form = useForm<FormValues>({
         defaultValues: {
         title: '',
