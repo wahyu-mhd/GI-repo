@@ -4,6 +4,7 @@ import { use, useEffect, useState } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Course, Quiz } from '@/lib/mockData'
+import { LessonContent } from '@/components/lesson/LessonContent'
 
 type Params = { courseId: string; quizId: string } | Promise<{ courseId: string; quizId: string }>
 type Props = { params: Params }
@@ -15,6 +16,7 @@ type QuizQuestion = {
   type: 'single' | 'multiple' | 'short' | 'long'
   choices?: string[]
   correctIndex?: number
+  explanation?: string
   correctPoints?: number
   wrongPoints?: number
   skipPoints?: number
@@ -162,6 +164,12 @@ export default function QuizPage({ params }: Props) {
                   )
                 })}
               </div>
+              {submitted && q.explanation && (
+                <div className="rounded-md bg-blue-50 border border-blue-100 px-3 py-2 text-xs text-slate-700 space-y-1">
+                  <span className="font-semibold text-slate-800 block">Explanation:</span>
+                  <LessonContent content={q.explanation} />
+                </div>
+              )}
             </div>
           )
         })}

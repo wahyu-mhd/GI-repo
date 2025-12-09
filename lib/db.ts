@@ -44,8 +44,8 @@ export function getCoursesByStageAndGrade(stage: Stage, grade: Grade): Course[] 
   return courses.filter(c => c.stage === stage && c.grade === grade)
 }
 
-export function getCoursesByTeacher(teacherName: string): Course[] {
-  return courses.filter(c => c.teacherName === teacherName)
+export function getCoursesByTeacher(teacherId: string): Course[] {
+  return courses.filter(c => c.teacherId === teacherId)
 }
 
 export function getCourseById(id: string): Course | undefined {

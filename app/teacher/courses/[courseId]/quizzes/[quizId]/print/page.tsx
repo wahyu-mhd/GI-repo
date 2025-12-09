@@ -1,10 +1,8 @@
 import { notFound } from 'next/navigation'
 import { getCourseByIdFile } from '@/lib/courseFileStore'
-import {
-  getQuizByIdFile,
-  getQuestionsByQuizFile,
-} from '@/lib/quizFileStore'
+import { getQuizByIdFile, getQuestionsByQuizFile } from '@/lib/quizFileStore'
 import { PrintButton } from '@/components/teacher/PrintButton'
+import { LessonContent } from '@/components/lesson/LessonContent'
 
 function lexicalJsonToPlainText(raw: string | undefined): string {
   if (!raw) return ''
@@ -49,7 +47,7 @@ export default async function QuizPrintPage({
         <p className="text-sm text-slate-500">No questions for this quiz yet.</p>
       ) : (
         <ol className="space-y-4 list-decimal pl-4">
-          {questions.map((q, idx) => (
+          {questions.map(q => (
             <li key={q.id} className="space-y-2">
               <div className="font-medium whitespace-pre-wrap">
                 {lexicalJsonToPlainText(q.questionText)}
@@ -61,18 +59,29 @@ export default async function QuizPrintPage({
                       q.type === 'single'
                         ? q.correctIndex === cIdx
                         : q.correctIndices?.includes(cIdx)
-                  return (
-                    <li key={cIdx} className={isCorrect ? 'font-semibold' : ''}>
-                      {choice}
-                      {isCorrect ? ' (correct)' : ''}
-                    </li>
-                  )
+                    return (
+                      <li key={cIdx} className={isCorrect ? 'font-semibold' : ''}>
+                        {choice}
+                        {isCorrect ? ' (correct)' : ''}
+                      </li>
+                    )
                   })}
                 </ul>
               ) : (
-                <p className="text-sm text-slate-600">
-                  Expected answer: {q.expectedAnswer || '—'}
-                </p>
+                <div className="text-sm text-slate-600 space-y-1">
+                  <p className="font-semibold">Expected answer:</p>
+                  {q.expectedAnswer ? (
+                    <LessonContent content={q.expectedAnswer} />
+                  ) : (
+                    <p className="text-slate-500">N/A</p>
+                  )}
+                </div>
+              )}
+              {q.explanation && (
+                <div className="text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded p-2 space-y-1">
+                  <p className="font-semibold">Explanation:</p>
+                  <LessonContent content={q.explanation} />
+                </div>
               )}
             </li>
           ))}

@@ -1,0 +1,22 @@
+[
+  {
+    "id": "progress-1",
+    "studentId": "user-student-1",
+    "courseId": "course-1",
+    "startedAt": "2024-09-01T08:00:00.000Z",
+    "updatedAt": "2024-12-01T10:30:00.000Z",
+    "completedLessons": 3,
+    "totalLessons": 5,
+    "lastLessonId": "lesson-2",
+    "lastQuizId": "quiz-1"
+  },
+  {
+    "id": "progress-2",
+    "studentId": "user-student-1",
+    "courseId": "course-2",
+    "startedAt": "2024-09-15T09:00:00.000Z",
+    "updatedAt": "2024-11-20T12:00:00.000Z",
+    "completedLessons": 1,
+    "totalLessons": 3
+  }
+]

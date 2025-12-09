@@ -83,6 +83,7 @@ export async function PUT(
         correctIndex: q.correctIndex,
         correctIndices: q.correctIndices,
         expectedAnswer: q.expectedAnswer,
+        explanation: q.explanation?.trim() || undefined,
         correctPoints: q.correctPoints ?? 1,
         wrongPoints: q.wrongPoints ?? 0,
         skipPoints: q.skipPoints ?? 0,

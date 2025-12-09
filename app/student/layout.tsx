@@ -41,8 +41,7 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
         </h2>
         <nav className="space-y-1">
           <StudentNavLink href="/student/courses" label="My Courses" />
-          {/* Future links: */}
-          {/* <StudentNavLink href="/student/progress" label="Progress" /> */}
+          <StudentNavLink href="/student/progress" label="Progress" />
           {/* <StudentNavLink href="/student/profile" label="Profile" /> */}
         </nav>
       </aside>

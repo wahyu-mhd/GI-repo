@@ -60,6 +60,7 @@ export async function addQuizQuestion(data: Omit<QuizQuestion, 'id'>): Promise<Q
     correctPoints: data.correctPoints ?? 1,
     wrongPoints: data.wrongPoints ?? 0,
     skipPoints: data.skipPoints ?? 0,
+    explanation: data.explanation?.trim() || undefined,
     ...data,
   }
   await writeQuizQuestions([...questions, newQuestion])
@@ -115,6 +116,7 @@ export async function replaceQuizQuestions(
     correctIndex: q.correctIndex,
     correctIndices: q.correctIndices,
     expectedAnswer: q.expectedAnswer,
+    explanation: q.explanation?.trim() || undefined,
     correctPoints: q.correctPoints ?? 1,
     wrongPoints: q.wrongPoints ?? 0,
     skipPoints: q.skipPoints ?? 0,

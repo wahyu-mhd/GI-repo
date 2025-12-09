@@ -36,6 +36,7 @@ type QuestionType = 'single' | 'multiple' | 'short' | 'long'
 type Question = {
   type: QuestionType
   text: string
+  explanation?: string
   choices: string[]
   correctIndex?: number
   correctIndices?: number[]
@@ -47,6 +48,7 @@ type Question = {
 
 type NewQuestion = {
   text: string
+  explanation?: string
   choices: string[]
   correctIndex: number
 }
@@ -99,7 +101,7 @@ export default function NewQuizPage(){
         title: '',
         description: '',
         questions: [
-            { type: 'single', text: '', choices: ['', '', ''], correctIndex: 0, correctIndices: [], correctPoints: 1, wrongPoints: 0, skipPoints: 0 },
+            { type: 'single', text: '', explanation: '', choices: ['', '', ''], correctIndex: 0, correctIndices: [], correctPoints: 1, wrongPoints: 0, skipPoints: 0 },
         ],
         },
     })
@@ -148,6 +150,7 @@ export default function NewQuizPage(){
           const base = {
             ...q,
             text: extractPlainText(q.text),
+            explanation: q.explanation?.trim() || undefined,
           }
           if (useUniformPoints) {
             return {
@@ -184,7 +187,7 @@ export default function NewQuizPage(){
       const qs = form.getValues('questions')
       form.setValue('questions', [
         ...qs,
-        { type: 'single', text: '', choices: ['', '', ''], correctIndex: 0, correctIndices: [], expectedAnswer: '', correctPoints: 1, wrongPoints: 0, skipPoints: 0 },
+        { type: 'single', text: '', explanation: '', choices: ['', '', ''], correctIndex: 0, correctIndices: [], expectedAnswer: '', correctPoints: 1, wrongPoints: 0, skipPoints: 0 },
       ], { shouldDirty: true })
     }
     
@@ -271,7 +274,7 @@ export default function NewQuizPage(){
     const handleAddQuestion = () => {
     setQuestions(qs => [
       ...qs,
-      { text: '', choices: ['', '', '', ''], correctIndex: 0 },
+      { text: '', explanation: '', choices: ['', '', '', ''], correctIndex: 0 },
     ])
   }
 
@@ -563,13 +566,21 @@ export default function NewQuizPage(){
                 </div>
 
                 {(q.type === 'short' || q.type === 'long') && (
-                <Textarea
-                    rows={q.type === 'short' ? 2 : 4}
-                    value={q.expectedAnswer ?? ''}
-                    onChange={e => updateQuestion(idx, { expectedAnswer: e.target.value })}
-                        placeholder="Expected answer (optional)"
+                    <RichTextEditor
+                      value={q.expectedAnswer ?? ''}
+                      onChange={val => updateQuestion(idx, { expectedAnswer: val })}
+                      placeholder="Expected answer (optional, supports markdown/links)"
                     />
                     )}
+
+                    <div className="space-y-1">
+                      <FormLabel>Explanation / solution (optional)</FormLabel>
+                      <RichTextEditor
+                        value={q.explanation ?? ''}
+                        onChange={val => updateQuestion(idx, { explanation: val })}
+                        placeholder="Give students a brief explanation or how to solve"
+                      />
+                    </div>
 
                     <Button type="button" variant="ghost" onClick={() => removeQuestion(idx)}>Delete question</Button>
                 </div>

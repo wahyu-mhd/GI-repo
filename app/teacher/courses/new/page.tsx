@@ -1,8 +1,9 @@
 ﻿'use client'
 
-import { FormEvent, useState } from 'react'
+import { FormEvent, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Grade, Stage, Subject } from '@/lib/mockData'
+import { loadMockSession } from '@/lib/sessionMock'
 
 const STAGES: Stage[] = ['elementary', 'junior', 'senior']
 const GRADES: Grade[] = [1,2,3,4,5,6,7,8,9,10,11,12]
@@ -25,8 +26,17 @@ export default function TeacherNewCoursePage() {
   const [grade, setGrade] = useState<Grade>(1)
   const [subject, setSubject] = useState<Subject>('math')
   const [teacherName, setTeacherName] = useState('Wahyu') // mock
+  const [teacherId, setTeacherId] = useState('user-teacher-1') // mock
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const session = loadMockSession()
+    if (session?.role === 'teacher') {
+      setTeacherId(session.id)
+      setTeacherName(session.name)
+    }
+  }, [])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -43,6 +53,7 @@ export default function TeacherNewCoursePage() {
           stage,
           grade,
           subject,
+          teacherId,
           teacherName,
         }),
       })
@@ -153,6 +164,18 @@ export default function TeacherNewCoursePage() {
             value={teacherName}
             onChange={(e) => setTeacherName(e.target.value)}
           />
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Teacher ID (unique)</label>
+          <input
+            className="w-full rounded border px-3 py-2 text-sm"
+            value={teacherId}
+            onChange={(e) => setTeacherId(e.target.value)}
+          />
+          <p className="text-xs text-slate-500">
+            Used to uniquely identify the teacher even if names are similar.
+          </p>
         </div>
 
         <button

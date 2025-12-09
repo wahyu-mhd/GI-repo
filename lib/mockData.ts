@@ -40,6 +40,7 @@ export type Course = {
   id: string
   title: string
   description: string
+  teacherId: string
   teacherName: string
 
   stage: Stage
@@ -56,6 +57,7 @@ export type QuizQuestion = {
   correctIndex?: number       // single
   correctIndices?: number[]   // multiple
   expectedAnswer?: string     // short/long
+  explanation?: string        // optional solution / rationale
   correctPoints?: number      // points for a correct answer
   wrongPoints?: number        // points for an incorrect answer
   skipPoints?: number         // points (likely 0) for unanswered
@@ -66,6 +68,19 @@ export type Quiz = {
   courseId: string
   title: string
   description?: string
+}
+
+export type StudentProgress = {
+  id: string
+  studentId: string
+  courseId: string
+  startedAt: string
+  updatedAt: string
+  completedLessons: number
+  totalLessons: number
+  lastLessonId?: string
+  lastQuizId?: string
+  percentComplete?: number // optional override; otherwise compute from lessons
 }
 
 export type Announcement = {
@@ -93,6 +108,7 @@ export const mockCourses: Course[] = [
     id: 'course-1',
     title: 'Math - Grade 3',
     description: 'Basic addition and subtraction for Grade 3.',
+    teacherId: 'user-teacher-1',
     teacherName: 'Wahyu',
     stage: 'elementary',
     grade: 3,
@@ -102,6 +118,7 @@ export const mockCourses: Course[] = [
     id: 'course-2',
     title: 'English - Grade 8',
     description: 'Daily English conversation and reading practice.',
+    teacherId: 'user-teacher-2',
     teacherName: 'Bapak Mahendra',
     stage: 'junior',
     grade: 8,
@@ -111,6 +128,7 @@ export const mockCourses: Course[] = [
     id: 'course-3',
     title: 'Science - Grade 5',
     description: 'Introduction to plants, animals, and basic experiments.',
+    teacherId: 'user-teacher-3',
     teacherName: 'Ibu Wahyu',
     stage: 'elementary',
     grade: 5,
@@ -120,6 +138,7 @@ export const mockCourses: Course[] = [
     id: 'course-4',
     title: 'Physics - Grade 11',
     description: 'Mechanics, motion, and basic kinematics.',
+    teacherId: 'user-teacher-3',
     teacherName: 'Ibu Wahyu',
     stage: 'senior',
     grade: 11,
@@ -180,6 +199,7 @@ export const mockQuizQuestions: QuizQuestion[] = [
     type: 'single',
     choices: ['10', '11', '12', '13'],
     correctIndex: 2,
+    explanation: 'Adding 5 and 7 gives 12. You can also think 7 + 3 = 10, plus 2 more.',
     correctPoints: 1,
     wrongPoints: 0,
     skipPoints: 0,
@@ -191,6 +211,7 @@ export const mockQuizQuestions: QuizQuestion[] = [
     type: 'single',
     choices: ['11', '12', '13', '14'],
     correctIndex: 1,
+    explanation: '9 + 3 = 12 because 9 needs 1 to reach 10, leaving 2 more.',
     correctPoints: 1,
     wrongPoints: 0,
     skipPoints: 0,
@@ -235,5 +256,28 @@ export const mockAnnouncementComments: AnnouncementComment[] = [
     authorName: 'Student B',
     message: 'Noted, I will check it out.',
     createdAt: '2024-04-17T05:12:00.000Z',
+  },
+]
+
+export const mockStudentProgress: StudentProgress[] = [
+  {
+    id: 'progress-1',
+    studentId: 'user-student-1',
+    courseId: 'course-1',
+    startedAt: '2024-09-01T08:00:00.000Z',
+    updatedAt: '2024-12-01T10:30:00.000Z',
+    completedLessons: 3,
+    totalLessons: 5,
+    lastLessonId: 'lesson-2',
+    lastQuizId: 'quiz-1',
+  },
+  {
+    id: 'progress-2',
+    studentId: 'user-student-1',
+    courseId: 'course-2',
+    startedAt: '2024-09-15T09:00:00.000Z',
+    updatedAt: '2024-11-20T12:00:00.000Z',
+    completedLessons: 1,
+    totalLessons: 3,
   },
 ]

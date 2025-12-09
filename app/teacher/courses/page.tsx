@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Course } from '@/lib/mockData'
 import { loadMockSession } from '@/lib/sessionMock'
 
-const currentTeacherName = 'Wahyu'
+const currentTeacher = { id: 'user-teacher-1', name: 'Wahyu' }
 
 export default function TeacherCoursesPage() {
   const [courses, setCourses] = useState<Course[]>([])
@@ -31,11 +31,12 @@ export default function TeacherCoursesPage() {
 
   const session = loadMockSession()
   const isSuperuser = session?.role === 'superuser'
-  const teacherName = session?.name ?? currentTeacherName
+  const teacherName = session?.name ?? currentTeacher.name
+  const teacherId = session?.id ?? currentTeacher.id
 
   const myCourses = isSuperuser
     ? courses
-    : courses.filter((c) => c.teacherName === teacherName)
+    : courses.filter((c) => c.teacherId === teacherId)
 
   return (
     <section className="space-y-4">
@@ -43,7 +44,7 @@ export default function TeacherCoursesPage() {
         <div>
           <h1 className="text-2xl font-bold">My Courses</h1>
           <p className="text-sm text-slate-600">
-            Logged in as: {teacherName} (mock){' '}
+            Logged in as: {teacherName} ({teacherId}) (mock){' '}
             {isSuperuser && <span className="text-green-600">(Superuser)</span>}
           </p>
         </div>

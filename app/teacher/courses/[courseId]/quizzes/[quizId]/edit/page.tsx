@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import type { Quiz, QuizQuestion } from '@/lib/mockData'
+import { RichTextEditor } from '@/components/editor/RichTextEditor'
 
 type Props = {
   params: Promise<{ courseId: string; quizId: string }>
@@ -16,6 +17,7 @@ type EditableQuestion = {
   id?: string
   type: 'single' | 'multiple' | 'short' | 'long'
   text: string
+  explanation?: string
   choices: string[]
   correctIndex?: number
   correctIndices?: number[]
@@ -72,6 +74,7 @@ export default function EditQuizPage({ params }: Props) {
             id: q.id,
             type: q.type,
             text: extractPlainText(q.questionText),
+            explanation: q.explanation,
             choices: q.choices ?? ['', ''],
             correctIndex: q.correctIndex,
             correctIndices: q.correctIndices,
@@ -188,6 +191,7 @@ export default function EditQuizPage({ params }: Props) {
             correctIndex: q.correctIndex,
             correctIndices: q.correctIndices,
             expectedAnswer: q.expectedAnswer,
+            explanation: q.explanation?.trim() || undefined,
             correctPoints: q.correctPoints ?? 1,
             wrongPoints: q.wrongPoints ?? 0,
             skipPoints: q.skipPoints ?? 0,
@@ -373,13 +377,22 @@ export default function EditQuizPage({ params }: Props) {
             {(q.type === 'short' || q.type === 'long') && (
               <div className="space-y-1">
                 <label className="text-xs text-slate-600">Expected answer (optional)</label>
-                <Textarea
-                  rows={q.type === 'short' ? 2 : 4}
+                <RichTextEditor
                   value={q.expectedAnswer ?? ''}
-                  onChange={e => updateQuestion(idx, { expectedAnswer: e.target.value })}
+                  onChange={val => updateQuestion(idx, { expectedAnswer: val })}
+                  placeholder="Write the model answer. Supports markdown, links, rich text."
                 />
               </div>
             )}
+
+            <div className="space-y-1">
+              <label className="text-xs text-slate-600">Explanation / solution (optional)</label>
+              <RichTextEditor
+                value={q.explanation ?? ''}
+                onChange={val => updateQuestion(idx, { explanation: val })}
+                placeholder="Give students a hint or the full solution (supports rich text and links)."
+              />
+            </div>
 
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">

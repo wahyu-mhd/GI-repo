@@ -21,6 +21,13 @@
     "canManageStudents": true
   },
   {
+    "id": "user-teacher-3",
+    "name": "Ibu Wahyu",
+    "role": "teacher",
+    "email": "ibu.wahyu@example.com",
+    "canManageStudents": false
+  },
+  {
     "id": "user-student-1",
     "name": "Student User",
     "role": "student",

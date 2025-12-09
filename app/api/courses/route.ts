@@ -18,6 +18,7 @@ export async function GET() {
 type IncomingCourse = {
   title?: string
   description?: string
+  teacherId?: string
   teacherName?: string
   stage?: Stage
   grade?: Grade
@@ -28,6 +29,7 @@ function isValidCourse(body: IncomingCourse): body is Required<IncomingCourse> {
   return Boolean(
     body.title &&
     body.description !== undefined &&
+    body.teacherId &&
     body.teacherName &&
     body.stage &&
     body.grade &&
@@ -46,6 +48,7 @@ export async function POST(request: Request) {
     const created = await addCourse({
       title: body.title,
       description: body.description,
+      teacherId: body.teacherId,
       teacherName: body.teacherName,
       stage: body.stage,
       grade: body.grade,
