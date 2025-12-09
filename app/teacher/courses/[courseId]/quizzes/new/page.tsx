@@ -113,6 +113,8 @@ export default function NewQuizPage(){
     const [description, setDescription] = useState('')
     const [questions, setQuestions] = useState<NewQuestion[]>([{ text: '', choices: ['', '', '', ''], correctIndex: 0 },])
     const [submitting, setSubmitting] = useState(false)
+    const [useUniformPoints, setUseUniformPoints] = useState(false)
+    const [uniformPoints, setUniformPoints] = useState({ correct: 1, wrong: 0, skip: 0 })
     // const onSubmit = (values: FormValues) => {
     //     if (!course) return
     //   // do quiz creation here (createQuiz/createQuizQuestion, then router.push)
@@ -142,10 +144,21 @@ export default function NewQuizPage(){
       setSubmitting(true)
       setError(null)
       try {
-        const sanitizedQuestions = (values.questions ?? []).map(q => ({
-          ...q,
-          text: extractPlainText(q.text),
-        }))
+        const sanitizedQuestions = (values.questions ?? []).map(q => {
+          const base = {
+            ...q,
+            text: extractPlainText(q.text),
+          }
+          if (useUniformPoints) {
+            return {
+              ...base,
+              correctPoints: uniformPoints.correct,
+              wrongPoints: uniformPoints.wrong,
+              skipPoints: uniformPoints.skip,
+            }
+          }
+          return base
+        })
         const res = await fetch(`/api/courses/${courseId}/quizzes`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -415,6 +428,51 @@ export default function NewQuizPage(){
                     <FormMessage />
                 </FormItem>
                 )} />
+                <div className="rounded border p-3 space-y-2 bg-slate-50">
+                  <div className="flex items-center justify-between text-sm">
+                    <div>
+                      <p className="font-semibold">Use same points for all questions</p>
+                      <p className="text-xs text-slate-600">If enabled, these values override per-question points.</p>
+                    </div>
+                    <label className="flex items-center gap-2 text-xs">
+                      <input
+                        type="checkbox"
+                        checked={useUniformPoints}
+                        onChange={e => setUseUniformPoints(e.target.checked)}
+                      />
+                      Enable
+                    </label>
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-3 text-sm">
+                    <label className="space-y-1">
+                      <span className="text-xs font-medium">Points for correct</span>
+                      <Input
+                        type="number"
+                        value={uniformPoints.correct}
+                        onChange={e => setUniformPoints(prev => ({ ...prev, correct: Number(e.target.value) || 0 }))}
+                        disabled={!useUniformPoints}
+                      />
+                    </label>
+                    <label className="space-y-1">
+                      <span className="text-xs font-medium">Points for wrong</span>
+                      <Input
+                        type="number"
+                        value={uniformPoints.wrong}
+                        onChange={e => setUniformPoints(prev => ({ ...prev, wrong: Number(e.target.value) || 0 }))}
+                        disabled={!useUniformPoints}
+                      />
+                    </label>
+                    <label className="space-y-1">
+                      <span className="text-xs font-medium">Points for no answer</span>
+                      <Input
+                        type="number"
+                        value={uniformPoints.skip}
+                        onChange={e => setUniformPoints(prev => ({ ...prev, skip: Number(e.target.value) || 0 }))}
+                        disabled={!useUniformPoints}
+                      />
+                    </label>
+                  </div>
+                </div>
 
                 {form.watch('questions').map((q, idx) => (
                 <div key={idx} className="space-y-3 rounded border p-3">

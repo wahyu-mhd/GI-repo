@@ -64,6 +64,37 @@ type Props = {
   placeholder?: string
 }
 
+function toLexicalStateFromPlain(text: string): string {
+  const paragraph = {
+    children: [
+      {
+        detail: 0,
+        format: 0,
+        mode: 'normal',
+        style: '',
+        text,
+        type: 'text',
+        version: 1,
+      },
+    ],
+    direction: null,
+    format: '',
+    indent: 0,
+    type: 'paragraph',
+    version: 1,
+  }
+  return JSON.stringify({
+    root: {
+      children: [paragraph],
+      direction: null,
+      format: '',
+      indent: 0,
+      type: 'root',
+      version: 1,
+    },
+  })
+}
+
 const editorNodes = [
   HeadingNode,
   ParagraphNode,
@@ -87,7 +118,15 @@ const editorConfig: InitialConfigType = {
 }
 
 export function RichTextEditor({ value, onChange, placeholder = 'Start typing...' }: Props) {
-  const editorState = value && value.trim() ? value : undefined
+  const editorState = useMemo(() => {
+    if (!value || !value.trim()) return undefined
+    try {
+      JSON.parse(value)
+      return value
+    } catch {
+      return toLexicalStateFromPlain(value)
+    }
+  }, [value])
   const anchorElem = useRef<HTMLDivElement | null>(null)
   const [isLinkEditMode, setIsLinkEditMode] = useState(false)
 

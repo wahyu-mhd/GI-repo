@@ -3,8 +3,7 @@
     "id": "lesson-1",
     "moduleId": "module-1",
     "title": "Adding 1-2 Digit Numbers",
-    "content": "In this lesson, we practice adding 1-2 digit numbers with examples.",
-    "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "content": "{\"root\":{\"children\":[{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"In this lesson, we practice adding 1-2 digit numbers with examples. \",\"type\":\"text\",\"version\":1},{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"https://youtu.be/G-UygClL2tY?si=4TCkbGc9p5DJ1Au1\",\"type\":\"text\",\"version\":1}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"autolink\",\"version\":1,\"rel\":null,\"target\":null,\"title\":null,\"url\":\"https://youtu.be/G-UygClL2tY?si=4TCkbGc9p5DJ1Au1\",\"isUnlinked\":false}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"paragraph\",\"version\":1,\"textFormat\":0,\"textStyle\":\"\"},{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"hi\",\"type\":\"text\",\"version\":1}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"paragraph\",\"version\":1,\"textFormat\":0,\"textStyle\":\"\"}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"root\",\"version\":1}}",
     "pdfUrl": "/sample/addition-practice.pdf"
   },
   {
@@ -54,5 +53,17 @@
     "moduleId": "module-1765177157539-8",
     "title": "testing leasson",
     "content": "{\"root\":{\"children\":[{\"children\":[{\"detail\":0,\"format\":1,\"mode\":\"normal\",\"style\":\"\",\"text\":\"lesson test\",\"type\":\"text\",\"version\":1}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"paragraph\",\"version\":1,\"textFormat\":1,\"textStyle\":\"\"}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"root\",\"version\":1,\"textFormat\":1}}"
+  },
+  {
+    "id": "lesson-1765203901864-9",
+    "moduleId": "module-1765177157539-8",
+    "title": "englishh",
+    "content": "{\"root\":{\"children\":[{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"blahblah blah \",\"type\":\"text\",\"version\":1},{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"https://youtu.be/G-UygClL2tY?si=4TCkbGc9p5DJ1Au1\",\"type\":\"text\",\"version\":1}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"autolink\",\"version\":1,\"rel\":null,\"target\":null,\"title\":null,\"url\":\"https://youtu.be/G-UygClL2tY?si=4TCkbGc9p5DJ1Au1\",\"isUnlinked\":false}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"paragraph\",\"version\":1,\"textFormat\":0,\"textStyle\":\"\"}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"root\",\"version\":1}}"
+  },
+  {
+    "id": "lesson-1765204533701-10",
+    "moduleId": "module-1765204522519-10",
+    "title": "english",
+    "content": "{\"root\":{\"children\":[{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"fghjk \",\"type\":\"text\",\"version\":1},{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"https://youtu.be/G-UygClL2tY?si=4TCkbGc9p5DJ1Au1\",\"type\":\"text\",\"version\":1}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"autolink\",\"version\":1,\"rel\":null,\"target\":null,\"title\":null,\"url\":\"https://youtu.be/G-UygClL2tY?si=4TCkbGc9p5DJ1Au1\",\"isUnlinked\":false}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"paragraph\",\"version\":1,\"textFormat\":0,\"textStyle\":\"\"}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"root\",\"version\":1}}"
   }
 ]

@@ -3,7 +3,11 @@ import {
   addModule,
   getLessonByIdFile,
   getModuleByIdFile,
+  readLessons,
+  readModules,
   updateLessonFile,
+  writeModules,
+  writeLessons,
 } from '@/lib/moduleLessonFileStore'
 
 export const runtime = 'nodejs'
@@ -61,4 +65,29 @@ export async function PUT(
 
   if (!updated) return NextResponse.json({ error: 'Update failed' }, { status: 500 })
   return NextResponse.json(updated)
+}
+
+export async function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ lessonId: string }> }
+) {
+  const { lessonId } = await params
+  const lessons = await readLessons()
+  const target = lessons.find(l => l.id === lessonId)
+  if (!target) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  const next = lessons.filter(l => l.id !== lessonId)
+
+  // Remove the module if it no longer has lessons
+  if (target.moduleId) {
+    const stillHasLessons = next.some(l => l.moduleId === target.moduleId)
+    if (!stillHasLessons) {
+      const modules = await readModules()
+      const filteredModules = modules.filter(m => m.id !== target.moduleId)
+      await writeModules(filteredModules)
+    }
+  }
+
+  await writeLessons(next)
+  return NextResponse.json({ ok: true })
 }

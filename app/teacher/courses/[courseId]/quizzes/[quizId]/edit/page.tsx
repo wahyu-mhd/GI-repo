@@ -52,6 +52,8 @@ export default function EditQuizPage({ params }: Props) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [useUniformPoints, setUseUniformPoints] = useState(false)
+  const [uniformPoints, setUniformPoints] = useState({ correct: 1, wrong: 0, skip: 0 })
 
   useEffect(() => {
     const load = async () => {
@@ -66,8 +68,7 @@ export default function EditQuizPage({ params }: Props) {
         setQuiz(loadedQuiz)
         setTitle(loadedQuiz.title ?? '')
         setDescription(loadedQuiz.description ?? '')
-        setQuestions(
-          loadedQuestions.map(q => ({
+        const normalizedQuestions = loadedQuestions.map(q => ({
             id: q.id,
             type: q.type,
             text: extractPlainText(q.questionText),
@@ -79,7 +80,23 @@ export default function EditQuizPage({ params }: Props) {
             wrongPoints: q.wrongPoints ?? 0,
             skipPoints: q.skipPoints ?? 0,
           }))
-        )
+        setQuestions(normalizedQuestions)
+        if (normalizedQuestions.length > 0) {
+          const [first, ...rest] = normalizedQuestions
+          const allSame = rest.every(q =>
+            q.correctPoints === first.correctPoints &&
+            q.wrongPoints === first.wrongPoints &&
+            q.skipPoints === first.skipPoints
+          )
+          if (allSame) {
+            setUseUniformPoints(true)
+            setUniformPoints({
+              correct: first.correctPoints ?? 1,
+              wrong: first.wrongPoints ?? 0,
+              skip: first.skipPoints ?? 0,
+            })
+          }
+        }
       } catch (err) {
         console.error(err)
         setError('Could not load quiz.')
@@ -162,18 +179,29 @@ export default function EditQuizPage({ params }: Props) {
       const payload = {
         title,
         description,
-        questions: questions.map(q => ({
-          id: q.id,
-          questionText: extractPlainText(q.text),
-          type: q.type,
-          choices: q.choices,
-          correctIndex: q.correctIndex,
-          correctIndices: q.correctIndices,
-          expectedAnswer: q.expectedAnswer,
-          correctPoints: q.correctPoints ?? 1,
-          wrongPoints: q.wrongPoints ?? 0,
-          skipPoints: q.skipPoints ?? 0,
-        })),
+        questions: questions.map(q => {
+          const base = {
+            id: q.id,
+            questionText: extractPlainText(q.text),
+            type: q.type,
+            choices: q.choices,
+            correctIndex: q.correctIndex,
+            correctIndices: q.correctIndices,
+            expectedAnswer: q.expectedAnswer,
+            correctPoints: q.correctPoints ?? 1,
+            wrongPoints: q.wrongPoints ?? 0,
+            skipPoints: q.skipPoints ?? 0,
+          }
+          if (useUniformPoints) {
+            return {
+              ...base,
+              correctPoints: uniformPoints.correct,
+              wrongPoints: uniformPoints.wrong,
+              skipPoints: uniformPoints.skip,
+            }
+          }
+          return base
+        }),
       }
       const res = await fetch(`/api/quizzes/${quizId}`, {
         method: 'PUT',
@@ -224,6 +252,51 @@ export default function EditQuizPage({ params }: Props) {
         <div className="space-y-1">
           <label className="text-sm font-medium">Description</label>
           <Textarea rows={3} value={description} onChange={e => setDescription(e.target.value)} />
+        </div>
+        <div className="rounded border p-3 space-y-2 bg-slate-50">
+          <div className="flex items-center justify-between text-sm">
+            <div>
+              <p className="font-semibold">Use same points for all questions</p>
+              <p className="text-xs text-slate-600">If enabled, these values override per-question points when saving.</p>
+            </div>
+            <label className="flex items-center gap-2 text-xs">
+              <input
+                type="checkbox"
+                checked={useUniformPoints}
+                onChange={e => setUseUniformPoints(e.target.checked)}
+              />
+              Enable
+            </label>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3 text-sm">
+            <label className="space-y-1">
+              <span className="text-xs font-medium">Points for correct</span>
+              <Input
+                type="number"
+                value={uniformPoints.correct}
+                onChange={e => setUniformPoints(prev => ({ ...prev, correct: Number(e.target.value) || 0 }))}
+                disabled={!useUniformPoints}
+              />
+            </label>
+            <label className="space-y-1">
+              <span className="text-xs font-medium">Points for wrong</span>
+              <Input
+                type="number"
+                value={uniformPoints.wrong}
+                onChange={e => setUniformPoints(prev => ({ ...prev, wrong: Number(e.target.value) || 0 }))}
+                disabled={!useUniformPoints}
+              />
+            </label>
+            <label className="space-y-1">
+              <span className="text-xs font-medium">Points for no answer</span>
+              <Input
+                type="number"
+                value={uniformPoints.skip}
+                onChange={e => setUniformPoints(prev => ({ ...prev, skip: Number(e.target.value) || 0 }))}
+                disabled={!useUniformPoints}
+              />
+            </label>
+          </div>
         </div>
       </div>
 

@@ -13,6 +13,7 @@ export default function SuperuserDashboardPage() {
   const [students, setStudents] = useState<User[]>([])
   const [enrollments, setEnrollments] = useState<Enrollment[]>([])
   const [courses, setCourses] = useState<Course[]>([])
+  const [siteSettings, setSiteSettings] = useState<{ heroBadge: string } | null>(null)
   const [selectedCourse, setSelectedCourse] = useState<string>('')
   const [selectedStudent, setSelectedStudent] = useState<string>('')
   const [studentQuery, setStudentQuery] = useState<string>('')
@@ -24,6 +25,7 @@ export default function SuperuserDashboardPage() {
   const [removingEnrollment, setRemovingEnrollment] = useState<string | null>(null)
   const [removingCourse, setRemovingCourse] = useState<string | null>(null)
   const [creatingUser, setCreatingUser] = useState(false)
+  const [savingSite, setSavingSite] = useState(false)
   const [newUser, setNewUser] = useState<{ role: 'student' | 'teacher'; name: string; email: string; canManageStudents: boolean }>({
     role: 'student',
     name: '',
@@ -40,19 +42,21 @@ export default function SuperuserDashboardPage() {
     setLoading(true)
     setError(null)
     try {
-      const [teachersRes, studentsRes, enrollRes] = await Promise.all([
+      const [teachersRes, studentsRes, enrollRes, siteRes] = await Promise.all([
         fetch('/api/superuser/teachers', { cache: 'no-store' }),
         fetch('/api/superuser/students', { cache: 'no-store' }),
         fetch('/api/superuser/enrollments', { cache: 'no-store' }),
+        fetch('/api/site', { cache: 'no-store' }),
       ])
       const coursesRes = await fetch('/api/courses', { cache: 'no-store' })
-      if (![teachersRes, studentsRes, enrollRes, coursesRes].every(r => r.ok)) {
+      if (![teachersRes, studentsRes, enrollRes, coursesRes, siteRes].every(r => r.ok)) {
         throw new Error('Failed to load data')
       }
       setTeachers(await teachersRes.json())
       setStudents(await studentsRes.json())
       setEnrollments(await enrollRes.json())
       setCourses(await coursesRes.json())
+      setSiteSettings(await siteRes.json())
     } catch (err) {
       console.error(err)
       setError('Could not load superuser data.')
@@ -201,6 +205,29 @@ export default function SuperuserDashboardPage() {
       setError('Could not create user.')
     } finally {
       setCreatingUser(false)
+    }
+  }
+
+  const handleSaveSite = async () => {
+    if (!siteSettings?.heroBadge.trim()) {
+      setError('Announcement text is required')
+      return
+    }
+    setSavingSite(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/site', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ heroBadge: siteSettings.heroBadge.trim() }),
+      })
+      if (!res.ok) throw new Error('failed')
+      setSiteSettings(await res.json())
+    } catch (err) {
+      console.error(err)
+      setError('Could not save announcement.')
+    } finally {
+      setSavingSite(false)
     }
   }
 
@@ -411,6 +438,29 @@ export default function SuperuserDashboardPage() {
               </div>
             )
           })}
+        </div>
+      </div>
+
+      <div className="rounded-lg border bg-white p-4 shadow-sm space-y-3">
+        <h2 className="text-lg font-semibold">Public site announcement</h2>
+        <p className="text-xs text-slate-500">
+          Controls the badge on the public landing page (visible to all visitors).
+        </p>
+        <input
+          type="text"
+          className="w-full rounded border px-3 py-2 text-sm"
+          value={siteSettings?.heroBadge ?? ''}
+          onChange={e => setSiteSettings(prev => ({ heroBadge: e.target.value }))}
+          placeholder="e.g., 🚀 New Academic Year Ready"
+        />
+        <div className="flex justify-end">
+          <button
+            className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+            onClick={handleSaveSite}
+            disabled={savingSite || !siteSettings?.heroBadge.trim()}
+          >
+            {savingSite ? 'Saving...' : 'Save announcement'}
+          </button>
         </div>
       </div>
 

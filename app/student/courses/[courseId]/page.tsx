@@ -12,6 +12,16 @@ type Props = {
 }
 
 type Enrollment = { id: string; courseId: string; studentId: string }
+type Feedback = {
+  id: string
+  courseId: string
+  studentId: string
+  teacherName: string
+  message: string
+  createdAt: string
+  read: boolean
+  readAt?: string
+}
 
 export default function StudentCourseDetailPage({ params }: Props) {
   const { courseId } = use(params)
@@ -19,6 +29,7 @@ export default function StudentCourseDetailPage({ params }: Props) {
   const [modules, setModules] = useState<Module[]>([])
   const [lessons, setLessons] = useState<Lesson[]>([])
   const [quizzes, setQuizzes] = useState<Quiz[]>([])
+  const [feedback, setFeedback] = useState<Feedback[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [authorized, setAuthorized] = useState(false)
@@ -66,6 +77,17 @@ export default function StudentCourseDetailPage({ params }: Props) {
         setLessons((await lessonsRes.json()) as Lesson[])
         setQuizzes((await quizzesRes.json()) as Quiz[])
         setAuthorized(true)
+
+        // Feedback load after authorization
+        const feedbackRes = await fetch(
+          `/api/feedback?studentId=${studentId}&courseId=${courseId}`,
+          { cache: 'no-store' }
+        )
+        if (feedbackRes.ok) {
+          const list = (await feedbackRes.json()) as Feedback[]
+          list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          setFeedback(list)
+        }
       } catch (err) {
         console.error(err)
         setError('Could not load course.')
@@ -75,6 +97,31 @@ export default function StudentCourseDetailPage({ params }: Props) {
     }
     load()
   }, [courseId, studentId])
+
+  const twelveHoursMs = 12 * 60 * 60 * 1000
+  const visibleFeedback = feedback.filter(item => {
+    if (!item.read) return true
+    if (!item.readAt) return true
+    const elapsed = Date.now() - new Date(item.readAt).getTime()
+    return elapsed < twelveHoursMs
+  })
+
+  const markAsRead = async (id: string) => {
+    try {
+      const res = await fetch(`/api/feedback/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ read: true }),
+      })
+      if (!res.ok) return
+      const updated = (await res.json()) as Feedback
+      setFeedback(prev =>
+        prev.map(item => (item.id === id ? updated : item))
+      )
+    } catch {
+      // ignore
+    }
+  }
 
   if (loading) {
     return (
@@ -137,6 +184,32 @@ export default function StudentCourseDetailPage({ params }: Props) {
         </div>
 
         <div className="space-y-3">
+          <h2 className="font-semibold">Teacher feedback</h2>
+          <div className="space-y-2">
+            {visibleFeedback.map(item => (
+              <div key={item.id} className="rounded-lg border bg-white p-3 text-sm">
+                <div className="flex justify-between text-xs text-slate-500">
+                  <span>From: {item.teacherName}</span>
+                  <span>{new Date(item.createdAt).toLocaleString()}</span>
+                </div>
+                <p className="mt-1 text-slate-800">{item.message}</p>
+                {!item.read && (
+                  <div className="mt-2 flex justify-end">
+                    <button
+                      className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700"
+                      onClick={() => markAsRead(item.id)}
+                    >
+                      Mark as read
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+            {visibleFeedback.length === 0 && (
+              <p className="text-xs text-slate-400">No feedback.</p>
+            )}
+          </div>
+
           <h2 className="font-semibold">Quizzes</h2>
           <div className="space-y-2">
             {quizzes.map(quiz => (

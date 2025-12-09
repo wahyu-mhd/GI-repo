@@ -1,0 +1,12 @@
+[
+  {
+    "id": "feedback-1765254933725-0",
+    "createdAt": "2025-12-09T04:35:33.725Z",
+    "read": true,
+    "studentId": "user-student-1",
+    "courseId": "course-1",
+    "teacherName": "Wahyu",
+    "message": "focus on the test please",
+    "readAt": "2025-12-09T04:35:49.199Z"
+  }
+]

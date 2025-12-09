@@ -7,7 +7,7 @@ import { LessonContent } from '@/components/lesson/LessonContent'
 
 type Course = { id: string; title: string }
 type Module = { id: string; title: string }
-type Lesson = { id: string; moduleId: string; title: string; content: string }
+type Lesson = { id: string; moduleId: string; title: string; content: string; videoUrl?: string }
 
 export default function EditLessonPage() {
   const router = useRouter()
@@ -24,6 +24,8 @@ export default function EditLessonPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [newModuleTitle, setNewModuleTitle] = useState('')
+  const [creatingModule, setCreatingModule] = useState(false)
 
   useEffect(() => {
     if (!courseId || !lessonId) return
@@ -93,6 +95,31 @@ export default function EditLessonPage() {
     }
   }
 
+  const handleCreateModule = async () => {
+    if (!newModuleTitle.trim() || !courseId) return
+    setCreatingModule(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/courses/${courseId}/modules`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: newModuleTitle.trim() }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to create module')
+      }
+      const created: Module = await res.json()
+      setModules(prev => [...prev, created])
+      setModuleId(created.id)
+      setNewModuleTitle('')
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Could not create module')
+    } finally {
+      setCreatingModule(false)
+    }
+  }
+
   if (loading) return <p>Loading...</p>
   if (error) return <p>{error}</p>
   if (!course) return <p>Course not found.</p>
@@ -130,6 +157,25 @@ export default function EditLessonPage() {
               No modules yet. Saving will create a default "General" module for this course.
             </p>
           )}
+        </div>
+        <div className="space-y-2 rounded border p-3">
+          <p className="text-xs font-medium text-slate-700">Create a new module</p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <input
+              className="w-full rounded border px-3 py-2 text-sm"
+              value={newModuleTitle}
+              onChange={e => setNewModuleTitle(e.target.value)}
+              placeholder="Module title (e.g., Geometry, Reading Comprehension)"
+            />
+            <button
+              type="button"
+              className="rounded bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+              onClick={handleCreateModule}
+              disabled={creatingModule || !newModuleTitle.trim()}
+            >
+              {creatingModule ? 'Creating...' : 'Add module'}
+            </button>
+          </div>
         </div>
         <div className="space-y-1">
           <p className="text-sm font-medium">Lesson Content</p>

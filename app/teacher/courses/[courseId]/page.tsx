@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { getCourseByIdFile } from '@/lib/courseFileStore'
 import { CourseAnnouncements } from '@/components/announcements/CourseAnnouncements'
 import { EditCourseForm } from '@/components/teacher/EditCourseForm'
+import { TeacherFeedbackPanel } from '@/components/teacher/TeacherFeedbackPanel'
 
 export const dynamic = 'force-dynamic'
 
@@ -74,6 +75,8 @@ export default async function TeacherCourseDetailPage({ params }: Props) {
               viewerName={currentTeacherName}
               canCreate
             />
+
+            <TeacherFeedbackPanel courseId={course.id} teacherName={currentTeacherName} />
 
             <EditCourseForm course={course} />
         </section>

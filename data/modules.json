@@ -52,5 +52,17 @@
     "courseId": "course-1764669321956",
     "title": "General",
     "order": 1
+  },
+  {
+    "id": "module-1765203927637-9",
+    "courseId": "course-1764669321956",
+    "title": "tester",
+    "order": 2
+  },
+  {
+    "id": "module-1765204522519-10",
+    "courseId": "course-1764669321956",
+    "title": "grammar",
+    "order": 3
   }
 ]
