@@ -36,6 +36,9 @@ export async function POST(
       description?: string
       questions?: IncomingQuestion[]
       maxAttempts?: number
+      timeLimitMinutes?: number
+      availableFrom?: string
+      availableUntil?: string
     }
     if (!body.title || !body.questions?.length) {
       return NextResponse.json({ error: 'Missing title or questions' }, { status: 400 })
@@ -49,11 +52,54 @@ export async function POST(
       body.maxAttempts = Math.floor(attempts)
     }
 
+    if (body.timeLimitMinutes !== undefined) {
+      const limit = Number(body.timeLimitMinutes)
+      if (!Number.isFinite(limit) || limit < 1) {
+        return NextResponse.json(
+          { error: 'timeLimitMinutes must be 1 minute or greater' },
+          { status: 400 }
+        )
+      }
+      body.timeLimitMinutes = Math.floor(limit)
+    }
+
+    const normalizeDate = (value: string | undefined) => {
+      if (value === undefined || value === null) return undefined
+      const trimmed = String(value).trim()
+      if (!trimmed) return undefined
+      const date = new Date(trimmed)
+      if (Number.isNaN(date.getTime())) return null
+      return date.toISOString()
+    }
+
+    const normalizedAvailableFrom = normalizeDate(body.availableFrom)
+    const normalizedAvailableUntil = normalizeDate(body.availableUntil)
+
+    if (normalizedAvailableFrom === null) {
+      return NextResponse.json({ error: 'availableFrom must be a valid date' }, { status: 400 })
+    }
+    if (normalizedAvailableUntil === null) {
+      return NextResponse.json({ error: 'availableUntil must be a valid date' }, { status: 400 })
+    }
+    if (
+      normalizedAvailableFrom &&
+      normalizedAvailableUntil &&
+      new Date(normalizedAvailableUntil).getTime() < new Date(normalizedAvailableFrom).getTime()
+    ) {
+      return NextResponse.json(
+        { error: 'availableUntil must be after availableFrom' },
+        { status: 400 }
+      )
+    }
+
     const quiz = await addQuiz({
       courseId: courseId,
       title: body.title,
       description: body.description,
       maxAttempts: body.maxAttempts,
+      timeLimitMinutes: body.timeLimitMinutes,
+      availableFrom: normalizedAvailableFrom,
+      availableUntil: normalizedAvailableUntil,
     })
 
     await Promise.all(

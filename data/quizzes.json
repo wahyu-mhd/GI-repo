@@ -4,7 +4,10 @@
     "courseId": "course-1",
     "title": "Addition Quiz 1",
     "description": "Check your understanding of basic addition.",
-    "maxAttempts": 1
+    "maxAttempts": 1,
+    "timeLimitMinutes": 4,
+    "availableFrom": "2025-12-10T13:22:00.000Z",
+    "availableUntil": "2025-12-10T13:23:00.000Z"
   },
   {
     "id": "quiz-1765006830973",
@@ -28,6 +31,7 @@
     "id": "quiz-1765178858235",
     "courseId": "course-1764669321956",
     "title": "vbnm",
-    "description": "ghjk"
+    "description": "ghjk",
+    "timeLimitMinutes": 10
   }
 ]

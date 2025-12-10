@@ -69,6 +69,9 @@ export type Quiz = {
   title: string
   description?: string
   maxAttempts?: number
+  timeLimitMinutes?: number
+  availableFrom?: string   // ISO string when quiz opens
+  availableUntil?: string  // ISO string when quiz closes
 }
 
 export type QuizSubmissionResponse = {

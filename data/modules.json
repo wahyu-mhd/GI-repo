@@ -6,12 +6,6 @@
     "order": 1
   },
   {
-    "id": "module-2",
-    "courseId": "course-1",
-    "title": "Word Problems",
-    "order": 2
-  },
-  {
     "id": "module-3",
     "courseId": "course-2",
     "title": "Greetings & Introductions",

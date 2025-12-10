@@ -11,6 +11,19 @@ export default async function TeacherQuizzesPage({params}: {params: Promise<{ co
     const course = await getCourseByIdFile(courseId)
     if (!course) return notFound()
     const quizzes = await getQuizzesByCourseFile(course.id)
+    const formatDate = (iso?: string) => {
+      if (!iso) return null
+      const date = new Date(iso)
+      if (Number.isNaN(date.getTime())) return null
+      return date.toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      })
+    }
     return(
         <section className='space y-4'>
             <header className='flex items-center justify-between'>
@@ -43,8 +56,18 @@ export default async function TeacherQuizzesPage({params}: {params: Promise<{ co
                                     {q.description}
                                 </p>
                             )}
+                            {q.timeLimitMinutes !== undefined && (
+                                <p className='text-xs text-slate-500 mt-1'>Time limit: {q.timeLimitMinutes} min</p>
+                            )}
                             {q.maxAttempts !== undefined && (
                                 <p className='text-xs text-slate-500 mt-1'>Max attempts: {q.maxAttempts}</p>
+                            )}
+                            {(formatDate(q.availableFrom) || formatDate(q.availableUntil)) && (
+                              <p className='text-xs text-slate-500 mt-1'>
+                                {formatDate(q.availableFrom) ? `Opens ${formatDate(q.availableFrom)}` : 'Opens anytime'}
+                                {' · '}
+                                {formatDate(q.availableUntil) ? `Closes ${formatDate(q.availableUntil)}` : 'No close date'}
+                              </p>
                             )}
                         </div>
                         <div className='flex gap-3 text-xs items-center'>

@@ -46,17 +46,13 @@ type Question = {
   skipPoints?: number
 }
 
-type NewQuestion = {
-  text: string
-  explanation?: string
-  choices: string[]
-  correctIndex: number
-}
-
 type FormValues = {
   title: string
   description?: string
   maxAttempts?: number | ''
+  timeLimitMinutes?: number | ''
+  availableFrom?: string | ''
+  availableUntil?: string | ''
   questions: Question[]
 }
 
@@ -103,6 +99,9 @@ export default function NewQuizPage(){
         title: '',
         description: '',
         maxAttempts: '',
+        timeLimitMinutes: '',
+        availableFrom: '',
+        availableUntil: '',
         questions: [
             { type: 'single', text: '', explanation: '', choices: ['', '', ''], correctIndex: 0, correctIndices: [], correctPoints: 1, wrongPoints: 0, skipPoints: 0 },
         ],
@@ -116,7 +115,6 @@ export default function NewQuizPage(){
     
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
-    const [questions, setQuestions] = useState<NewQuestion[]>([{ text: '', choices: ['', '', '', ''], correctIndex: 0 },])
     const [submitting, setSubmitting] = useState(false)
     const [useUniformPoints, setUseUniformPoints] = useState(false)
     const [uniformPoints, setUniformPoints] = useState({ correct: 1, wrong: 0, skip: 0 })
@@ -149,6 +147,13 @@ export default function NewQuizPage(){
       setSubmitting(true)
       setError(null)
       try {
+        const normalizeDateInput = (value?: string | '') => {
+          if (value === undefined || value === null || value === '') return undefined
+          const date = new Date(value)
+          if (Number.isNaN(date.getTime())) return null
+          return date.toISOString()
+        }
+
         const sanitizedQuestions = (values.questions ?? []).map(q => {
           const base = {
             ...q,
@@ -169,6 +174,21 @@ export default function NewQuizPage(){
           values.maxAttempts === undefined || values.maxAttempts === ''
             ? undefined
             : Number(values.maxAttempts)
+        const parsedTimeLimit =
+          values.timeLimitMinutes === undefined || values.timeLimitMinutes === ''
+            ? undefined
+            : Number(values.timeLimitMinutes)
+        const normalizedAvailableFrom = normalizeDateInput(values.availableFrom)
+        const normalizedAvailableUntil = normalizeDateInput(values.availableUntil)
+        if (normalizedAvailableFrom === null) throw new Error('Please provide a valid start date/time')
+        if (normalizedAvailableUntil === null) throw new Error('Please provide a valid end date/time')
+        if (
+          normalizedAvailableFrom &&
+          normalizedAvailableUntil &&
+          new Date(normalizedAvailableUntil).getTime() < new Date(normalizedAvailableFrom).getTime()
+        ) {
+          throw new Error('End date/time must be after start date/time')
+        }
         const res = await fetch(`/api/courses/${courseId}/quizzes`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -176,13 +196,16 @@ export default function NewQuizPage(){
             title: values.title,
             description: values.description,
             maxAttempts: Number.isFinite(parsedMaxAttempts) ? parsedMaxAttempts : undefined,
+            timeLimitMinutes: Number.isFinite(parsedTimeLimit) ? parsedTimeLimit : undefined,
+            availableFrom: normalizedAvailableFrom,
+            availableUntil: normalizedAvailableUntil,
             questions: sanitizedQuestions,
           }),
         })
         if (!res.ok) throw new Error('Failed to save quiz')
         router.push(`/teacher/courses/${courseId}/quizzes`)
       } catch (e) {
-        setError('Could not save quiz')
+        setError(e instanceof Error ? e.message : 'Could not save quiz')
       } finally {
         setSubmitting(false)
       }
@@ -278,17 +301,12 @@ export default function NewQuizPage(){
         load()
     }, [courseId])
 
+    const questions = form.watch('questions') ?? []
+
     if (loading) return <p> loading....</p>
     if (error) return <p>{error}</p>
     if (!course) return <p>Course not found.</p>
 
-
-    const handleAddQuestion = () => {
-    setQuestions(qs => [
-      ...qs,
-      { text: '', explanation: '', choices: ['', '', '', ''], correctIndex: 0 },
-    ])
-  }
 
     // const handleSubmit = (e: FormEvent) => {
     //     e.preventDefault()
@@ -426,6 +444,8 @@ export default function NewQuizPage(){
     //     </section>
     // )
 
+    // const questions = form.watch('questions')
+
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -458,6 +478,53 @@ export default function NewQuizPage(){
                     <FormMessage />
                   </FormItem>
                 )} />
+                <FormField name="timeLimitMinutes" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Time limit in minutes (optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={1}
+                        placeholder="e.g. 30 for a 30 minute timer"
+                        value={field.value ?? ''}
+                        onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <p className="text-xs text-slate-500">When set, the quiz will auto-submit once time runs out.</p>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <FormField name="availableFrom" control={form.control} render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Quiz opens (optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="datetime-local"
+                          lang="en-GB"
+                          value={field.value ?? ''}
+                          onChange={e => field.onChange(e.target.value)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField name="availableUntil" control={form.control} render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Quiz closes (optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="datetime-local"
+                          lang="en-GB"
+                          value={field.value ?? ''}
+                          onChange={e => field.onChange(e.target.value)}
+                        />
+                      </FormControl>
+                      <p className="text-xs text-slate-500">Students will be blocked after this time.</p>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
                 <div className="rounded border p-3 space-y-2 bg-slate-50">
                   <div className="flex items-center justify-between text-sm">
                     <div>
@@ -504,7 +571,7 @@ export default function NewQuizPage(){
                   </div>
                 </div>
 
-                {form.watch('questions').map((q, idx) => (
+                {questions.map((q, idx) => (
                 <div key={idx} className="space-y-3 rounded border p-3">
                     <div className="flex gap-2">
                     <FormLabel className="flex-1">Question {idx + 1}</FormLabel>
@@ -613,8 +680,16 @@ export default function NewQuizPage(){
                 </div>
                 ))}
 
-                <Button type="button" variant="outline" onClick={addQuestion}>+ Add question</Button>
-                <Button type="submit" disabled={submitting}>Save Quiz</Button>
+                <div className="flex justify-start">
+                  <Button type="button" variant="outline" onClick={addQuestion}>
+                    + Add question
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <Button type="submit" disabled={submitting}>
+                    Save Quiz
+                  </Button>
+                </div>
             </form>
         </Form>
     )

@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useEffect, useState } from 'react'
+import { use, useEffect, useRef, useState } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Course, Quiz, QuizQuestion, QuizSubmission } from '@/lib/mockData'
@@ -24,12 +24,36 @@ export default function QuizPage({ params }: Props) {
   const [questions, setQuestions] = useState<QuizQuestion[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [accessMessage, setAccessMessage] = useState<string | null>(null)
 
   const [answers, setAnswers] = useState<(number | null)[]>([])
   const [submitted, setSubmitted] = useState(false)
   const [submission, setSubmission] = useState<QuizSubmission | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [timeLeftSeconds, setTimeLeftSeconds] = useState<number | null>(null)
+  const autoSubmitRef = useRef(false)
+
+  const formatTime = (seconds: number | null) => {
+    if (seconds === null) return ''
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  const formatDateTime = (value?: string | number) => {
+    if (!value) return ''
+    const date = typeof value === 'number' ? new Date(value) : new Date(value)
+    if (Number.isNaN(date.getTime())) return ''
+    return date.toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    })
+  }
 
   useEffect(() => {
     const load = async () => {
@@ -48,7 +72,20 @@ export default function QuizPage({ params }: Props) {
         const courseData = (await courseRes.json()) as Course
         const quizData = await quizRes.json()
         setCourse(courseData)
-        setQuiz(quizData.quiz ?? quizData)
+        const loadedQuiz = quizData.quiz ?? quizData
+        const now = Date.now()
+        const opensAt = loadedQuiz.availableFrom ? new Date(loadedQuiz.availableFrom).getTime() : undefined
+        const closesAt = loadedQuiz.availableUntil ? new Date(loadedQuiz.availableUntil).getTime() : undefined
+        let blocked: string | null = null
+        if ((opensAt && Number.isNaN(opensAt)) || (closesAt && Number.isNaN(closesAt))) {
+          blocked = 'Quiz availability date is invalid.'
+        } else if (opensAt && now < opensAt) {
+          blocked = `This quiz opens at ${formatDateTime(opensAt)}.`
+        } else if (closesAt && now > closesAt) {
+          blocked = 'This quiz is closed.'
+        }
+        setQuiz(loadedQuiz)
+        setAccessMessage(blocked)
         const qs: QuizQuestion[] = (quizData.questions ?? []).map((q: QuizQuestion) => ({
           ...q,
           correctPoints: q.correctPoints ?? 1,
@@ -57,6 +94,11 @@ export default function QuizPage({ params }: Props) {
         }))
         setQuestions(qs)
         setAnswers(qs.map(() => null))
+        setTimeLeftSeconds(
+          loadedQuiz.timeLimitMinutes && !blocked
+            ? Math.max(loadedQuiz.timeLimitMinutes * 60, 0)
+            : null
+        )
       } catch (err) {
         console.error(err)
         setError('Could not load quiz.')
@@ -66,20 +108,69 @@ export default function QuizPage({ params }: Props) {
     }
     load()
   }, [courseId, quizId])
+  useEffect(() => {
+    if (!quiz?.timeLimitMinutes) return
+    if (submitted || submitting) return
+    if (timeLeftSeconds === null) return
+    if (accessMessage) return
+    if (timeLeftSeconds <= 0) {
+      if (!autoSubmitRef.current) {
+        autoSubmitRef.current = true
+        handleSubmit()
+      }
+      return
+    }
+    const timerId = window.setInterval(() => {
+      setTimeLeftSeconds(prev =>
+        prev === null ? prev : Math.max(prev - 1, 0)
+      )
+    }, 1000)
+    return () => window.clearInterval(timerId)
+  }, [quiz?.timeLimitMinutes, submitted, submitting, timeLeftSeconds, accessMessage])
 
   if (loading) {
     return <p className="text-sm text-slate-500">Loading quiz...</p>
   }
 
-  if (error || !course || !quiz) return notFound()
+  if (error === 'Quiz not found.' || !course || !quiz) return notFound()
+  if (error) {
+    return <p className="text-sm text-red-600">{error}</p>
+  }
+
+  if (accessMessage) {
+    return (
+      <section className="space-y-3">
+        <Link
+          href={`/student/courses/${courseId}`}
+          className="text-xs text-blue-600 hover:underline"
+        >
+          Back to course
+        </Link>
+        <div className="rounded border bg-white p-4 space-y-2">
+          <h1 className="text-xl font-bold">{quiz.title}</h1>
+          <p className="text-sm text-slate-700">{accessMessage}</p>
+          <p className="text-xs text-slate-500">
+            {quiz.availableFrom ? `Opens: ${formatDateTime(quiz.availableFrom)}` : 'Opens: Anytime'}
+            {' · '}
+            {quiz.availableUntil ? `Closes: ${formatDateTime(quiz.availableUntil)}` : 'Closes: No limit'}
+          </p>
+        </div>
+      </section>
+    )
+  }
 
   const handleSelect = (qIndex: number, choiceIndex: number) => {
-    if (submitted) return
+    if (submitted || submitting) return
+    if (accessMessage) return
     setAnswers(prev => prev.map((a, i) => (i === qIndex ? choiceIndex : a)))
   }
 
   const handleSubmit = () => {
     if (submitted || submitting) return
+    if (accessMessage) {
+      setSubmitError(accessMessage)
+      return
+    }
     setSubmitting(true)
     setSubmitError(null)
     fetch(`/api/students/${studentId}/quizzes/${quizId}/submission`, {
@@ -115,6 +206,16 @@ export default function QuizPage({ params }: Props) {
 
   return (
     <section className="space-y-4">
+      {quiz.timeLimitMinutes && (
+        <div className="sticky top-0 z-20 -mx-2 md:mx-0 border-b bg-white/90 backdrop-blur px-4 py-3 flex items-center justify-between">
+          <span className="text-xs font-semibold uppercase text-slate-600 tracking-wide">
+            Time remaining
+          </span>
+          <span className="text-2xl font-bold text-red-600">
+            {submitted ? 'Finished' : formatTime(timeLeftSeconds)}
+          </span>
+        </div>
+      )}
       <div>
         <Link
           href={`/student/courses/${course.id}`}
@@ -125,6 +226,18 @@ export default function QuizPage({ params }: Props) {
         <h1 className="mt-1 text-2xl font-bold">{quiz.title}</h1>
         {quiz.description && (
           <p className="text-sm text-slate-700 mt-1">{quiz.description}</p>
+        )}
+        {(quiz.availableFrom || quiz.availableUntil) && (
+          <p className="text-xs text-slate-500 mt-1">
+            {quiz.availableFrom ? `Opens: ${formatDateTime(quiz.availableFrom)}` : 'Opens: Anytime'}
+            {' · '}
+            {quiz.availableUntil ? `Closes: ${formatDateTime(quiz.availableUntil)}` : 'Closes: No limit'}
+          </p>
+        )}
+        {quiz.timeLimitMinutes && (
+          <p className="text-xs text-slate-500 mt-1">
+            Time limit: {quiz.timeLimitMinutes} minute{quiz.timeLimitMinutes === 1 ? '' : 's'}
+          </p>
         )}
       </div>
 

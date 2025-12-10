@@ -41,6 +41,16 @@ export async function POST(
     return NextResponse.json({ error: 'Quiz has no questions' }, { status: 400 })
   }
 
+  const now = Date.now()
+  const opensAt = quiz.availableFrom ? new Date(quiz.availableFrom).getTime() : undefined
+  const closesAt = quiz.availableUntil ? new Date(quiz.availableUntil).getTime() : undefined
+  if (opensAt && now < opensAt) {
+    return NextResponse.json({ error: 'This quiz is not open yet.' }, { status: 403 })
+  }
+  if (closesAt && now > closesAt) {
+    return NextResponse.json({ error: 'This quiz is closed.' }, { status: 403 })
+  }
+
   if (quiz.maxAttempts !== undefined) {
     const submissions = await readQuizSubmissions()
     const attempts = submissions.filter(

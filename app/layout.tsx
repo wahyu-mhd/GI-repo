@@ -13,7 +13,7 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en-GB" suppressHydrationWarning>
       <body className="min-h-screen bg-background text-foreground transition-colors">
         <ThemeProvider>
           <header className="border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">

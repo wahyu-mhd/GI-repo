@@ -50,6 +50,9 @@ export default function EditQuizPage({ params }: Props) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [maxAttempts, setMaxAttempts] = useState<number | ''>('')
+  const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | ''>('')
+  const [availableFrom, setAvailableFrom] = useState<string>('')
+  const [availableUntil, setAvailableUntil] = useState<string>('')
   const [questions, setQuestions] = useState<EditableQuestion[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -74,6 +77,25 @@ export default function EditQuizPage({ params }: Props) {
         setMaxAttempts(
           loadedQuiz.maxAttempts !== undefined && loadedQuiz.maxAttempts !== null
             ? loadedQuiz.maxAttempts
+            : ''
+        )
+        const formatDateTimeLocal = (iso?: string) => {
+          if (!iso) return ''
+          const date = new Date(iso)
+          if (Number.isNaN(date.getTime())) return ''
+          const pad = (val: number) => val.toString().padStart(2, '0')
+          const year = date.getFullYear()
+          const month = pad(date.getMonth() + 1)
+          const day = pad(date.getDate())
+          const hours = pad(date.getHours())
+          const minutes = pad(date.getMinutes())
+          return `${year}-${month}-${day}T${hours}:${minutes}`
+        }
+        setAvailableFrom(formatDateTimeLocal(loadedQuiz.availableFrom))
+        setAvailableUntil(formatDateTimeLocal(loadedQuiz.availableUntil))
+        setTimeLimitMinutes(
+          loadedQuiz.timeLimitMinutes !== undefined && loadedQuiz.timeLimitMinutes !== null
+            ? loadedQuiz.timeLimitMinutes
             : ''
         )
         const normalizedQuestions = loadedQuestions.map(q => ({
@@ -186,6 +208,24 @@ export default function EditQuizPage({ params }: Props) {
     setSuccess(false)
     try {
       const parsedMaxAttempts = maxAttempts === '' ? null : Number(maxAttempts)
+      const parsedTimeLimit = timeLimitMinutes === '' ? null : Number(timeLimitMinutes)
+      const normalizeDateInput = (value: string) => {
+        if (value === '') return null
+        const date = new Date(value)
+        if (Number.isNaN(date.getTime())) {
+          throw new Error('Please enter a valid date/time')
+        }
+        return date.toISOString()
+      }
+      const normalizedAvailableFrom = normalizeDateInput(availableFrom)
+      const normalizedAvailableUntil = normalizeDateInput(availableUntil)
+      if (
+        normalizedAvailableFrom &&
+        normalizedAvailableUntil &&
+        new Date(normalizedAvailableUntil).getTime() < new Date(normalizedAvailableFrom).getTime()
+      ) {
+        throw new Error('Quiz closes must be after quiz opens')
+      }
       const payload = {
         title,
         description,
@@ -195,6 +235,14 @@ export default function EditQuizPage({ params }: Props) {
             : Number.isFinite(parsedMaxAttempts)
             ? parsedMaxAttempts
             : undefined,
+        timeLimitMinutes:
+          parsedTimeLimit === null
+            ? null
+            : Number.isFinite(parsedTimeLimit)
+            ? parsedTimeLimit
+            : undefined,
+        availableFrom: normalizedAvailableFrom,
+        availableUntil: normalizedAvailableUntil,
         questions: questions.map(q => {
           const base = {
             id: q.id,
@@ -281,6 +329,40 @@ export default function EditQuizPage({ params }: Props) {
           />
           <p className="text-xs text-slate-500">Students will be blocked after they reach this number of attempts.</p>
         </div>
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Time limit (minutes, optional)</label>
+          <Input
+            type="number"
+            min={1}
+            placeholder="Leave blank for no timer"
+            value={timeLimitMinutes}
+            onChange={e =>
+              setTimeLimitMinutes(e.target.value === '' ? '' : Number(e.target.value))
+            }
+          />
+          <p className="text-xs text-slate-500">When the timer hits zero the quiz will auto-submit for the student.</p>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Quiz opens (optional)</label>
+            <Input
+              type="datetime-local"
+              lang="en-GB"
+              value={availableFrom}
+              onChange={e => setAvailableFrom(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Quiz closes (optional)</label>
+            <Input
+              type="datetime-local"
+              lang="en-GB"
+              value={availableUntil}
+              onChange={e => setAvailableUntil(e.target.value)}
+            />
+            <p className="text-xs text-slate-500">Students will be blocked after this time.</p>
+          </div>
+        </div>
         <div className="rounded border p-3 space-y-2 bg-slate-50">
           <div className="flex items-center justify-between text-sm">
             <div>
@@ -352,10 +434,10 @@ export default function EditQuizPage({ params }: Props) {
 
             <div className="space-y-1">
               <label className="text-xs text-slate-600">Prompt</label>
-              <Textarea
-                rows={3}
+              <RichTextEditor
                 value={q.text}
-                onChange={e => updateQuestion(idx, { text: e.target.value })}
+                onChange={val => updateQuestion(idx, { text: val })}
+                placeholder="Write the question prompt. Supports rich text and links."
               />
             </div>
 

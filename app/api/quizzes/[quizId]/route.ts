@@ -45,14 +45,28 @@ export async function PUT(
     description: string
     questions: Array<Partial<UpsertQuizQuestionInput & { text?: string }>>
     maxAttempts: number | null
+    timeLimitMinutes: number | null
+    availableFrom: string | null
+    availableUntil: string | null
   }>
 
   const hasTitle = body.title !== undefined
   const hasDescription = body.description !== undefined
   const hasQuestions = Array.isArray(body.questions)
   const hasMaxAttempts = body.maxAttempts !== undefined
+  const hasTimeLimit = body.timeLimitMinutes !== undefined
+  const hasAvailableFrom = body.availableFrom !== undefined
+  const hasAvailableUntil = body.availableUntil !== undefined
 
-  if (!hasTitle && !hasDescription && !hasQuestions && !hasMaxAttempts) {
+  if (
+    !hasTitle &&
+    !hasDescription &&
+    !hasQuestions &&
+    !hasMaxAttempts &&
+    !hasTimeLimit &&
+    !hasAvailableFrom &&
+    !hasAvailableUntil
+  ) {
     return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
   }
 
@@ -71,6 +85,77 @@ export async function PUT(
       }
       nextMaxAttempts = Math.floor(attempts)
     }
+  }
+
+  let nextTimeLimit: number | undefined | null = undefined
+  if (hasTimeLimit) {
+    if (body.timeLimitMinutes === null) {
+      nextTimeLimit = undefined
+    } else {
+      const limit = Number(body.timeLimitMinutes)
+      if (!Number.isFinite(limit) || limit < 1) {
+        return NextResponse.json(
+          { error: 'timeLimitMinutes must be 1 minute or greater' },
+          { status: 400 }
+        )
+      }
+      nextTimeLimit = Math.floor(limit)
+    }
+  }
+
+  let nextAvailableFrom: string | undefined = undefined
+  if (hasAvailableFrom) {
+    if (body.availableFrom === null) {
+      nextAvailableFrom = undefined
+    } else {
+      const trimmed = String(body.availableFrom).trim()
+      if (trimmed) {
+        const date = new Date(trimmed)
+        if (Number.isNaN(date.getTime())) {
+          return NextResponse.json(
+            { error: 'availableFrom must be a valid date' },
+            { status: 400 }
+          )
+        }
+        nextAvailableFrom = date.toISOString()
+      } else {
+        nextAvailableFrom = undefined
+      }
+    }
+  }
+
+  let nextAvailableUntil: string | undefined = undefined
+  if (hasAvailableUntil) {
+    if (body.availableUntil === null) {
+      nextAvailableUntil = undefined
+    } else {
+      const trimmed = String(body.availableUntil).trim()
+      if (trimmed) {
+        const date = new Date(trimmed)
+        if (Number.isNaN(date.getTime())) {
+          return NextResponse.json(
+            { error: 'availableUntil must be a valid date' },
+            { status: 400 }
+          )
+        }
+        nextAvailableUntil = date.toISOString()
+      } else {
+        nextAvailableUntil = undefined
+      }
+    }
+  }
+
+  const effectiveFrom = hasAvailableFrom ? nextAvailableFrom : existing.availableFrom
+  const effectiveUntil = hasAvailableUntil ? nextAvailableUntil : existing.availableUntil
+  if (
+    effectiveFrom &&
+    effectiveUntil &&
+    new Date(effectiveUntil).getTime() < new Date(effectiveFrom).getTime()
+  ) {
+    return NextResponse.json(
+      { error: 'availableUntil must be after availableFrom' },
+      { status: 400 }
+    )
   }
 
   let savedQuestions = await getQuestionsByQuizFile(quizId)
@@ -117,6 +202,9 @@ export async function PUT(
     title: hasTitle ? body.title?.trim() : existing.title,
     description: hasDescription ? body.description?.trim() : existing.description,
     maxAttempts: hasMaxAttempts ? nextMaxAttempts ?? undefined : existing.maxAttempts,
+    timeLimitMinutes: hasTimeLimit ? nextTimeLimit ?? undefined : existing.timeLimitMinutes,
+    availableFrom: hasAvailableFrom ? nextAvailableFrom : existing.availableFrom,
+    availableUntil: hasAvailableUntil ? nextAvailableUntil : existing.availableUntil,
   })
 
   if (!updatedQuiz) return NextResponse.json({ error: 'Update failed' }, { status: 500 })

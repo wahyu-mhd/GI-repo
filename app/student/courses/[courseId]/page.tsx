@@ -190,7 +190,14 @@ export default function StudentCourseDetailPage({ params }: Props) {
               <div key={item.id} className="rounded-lg border bg-white p-3 text-sm">
                 <div className="flex justify-between text-xs text-slate-500">
                   <span>From: {item.teacherName}</span>
-                  <span>{new Date(item.createdAt).toLocaleString()}</span>
+                  <span>{new Date(item.createdAt).toLocaleString(undefined, {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false,
+                  })}</span>
                 </div>
                 <p className="mt-1 text-slate-800">{item.message}</p>
                 {!item.read && (
