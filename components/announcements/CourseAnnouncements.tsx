@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
+import {useEffect, useMemo, useState} from 'react'
+import {useLocale, useTranslations} from 'next-intl'
+import {Button} from '@/components/ui/button'
+import {Textarea} from '@/components/ui/textarea'
 
 type Announcement = {
   id: string
@@ -20,7 +21,7 @@ type AnnouncementComment = {
   createdAt: string
 }
 
-type AnnouncementThread = Announcement & { comments: AnnouncementComment[] }
+type AnnouncementThread = Announcement & {comments: AnnouncementComment[]}
 
 type Props = {
   courseId: string
@@ -28,17 +29,22 @@ type Props = {
   canCreate?: boolean
 }
 
-const dateFormatter = new Intl.DateTimeFormat('en-GB', {
-  day: '2-digit',
-  month: 'short',
-  year: 'numeric',
-})
+export function CourseAnnouncements({courseId, viewerName, canCreate}: Props) {
+  const t = useTranslations('announcements')
+  const locale = useLocale()
 
-function formatDate(iso: string) {
-  return dateFormatter.format(new Date(iso))
-}
+  const dateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(locale || 'en', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      }),
+    [locale]
+  )
 
-export function CourseAnnouncements({ courseId, viewerName, canCreate }: Props) {
+  const formatDate = (iso: string) => dateFormatter.format(new Date(iso))
+
   const [threads, setThreads] = useState<AnnouncementThread[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -59,13 +65,13 @@ export function CourseAnnouncements({ courseId, viewerName, canCreate }: Props) 
     try {
       setError(null)
       setLoading(true)
-      const res = await fetch(`/api/courses/${courseId}/announcements`, { cache: 'no-store' })
+      const res = await fetch(`/api/courses/${courseId}/announcements`, {cache: 'no-store'})
       if (!res.ok) throw new Error('Failed to load announcements')
       const data = (await res.json()) as AnnouncementThread[]
       setThreads(data)
     } catch (err) {
       console.error(err)
-      setError('Could not load announcements right now.')
+      setError(t('loadError'))
     } finally {
       setLoading(false)
     }
@@ -73,7 +79,7 @@ export function CourseAnnouncements({ courseId, viewerName, canCreate }: Props) 
 
   useEffect(() => {
     loadAnnouncements()
-  }, [courseId])
+  }, [courseId, t])
 
   const handleCreate = async () => {
     if (!announcementDraft.trim()) return
@@ -81,8 +87,8 @@ export function CourseAnnouncements({ courseId, viewerName, canCreate }: Props) 
     try {
       const res = await fetch(`/api/courses/${courseId}/announcements`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ authorName: viewerName, message: announcementDraft }),
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({authorName: viewerName, message: announcementDraft})
       })
       if (!res.ok) throw new Error('Failed to create announcement')
 
@@ -90,7 +96,7 @@ export function CourseAnnouncements({ courseId, viewerName, canCreate }: Props) 
       await loadAnnouncements()
     } catch (err) {
       console.error(err)
-      setError('Could not create announcement.')
+      setError(t('createError'))
     } finally {
       setPostingAnnouncement(false)
     }
@@ -100,36 +106,33 @@ export function CourseAnnouncements({ courseId, viewerName, canCreate }: Props) 
     const draft = commentDrafts[announcementId]?.trim()
     if (!draft) return
 
-    setPostingComment(prev => ({ ...prev, [announcementId]: true }))
+    setPostingComment(prev => ({...prev, [announcementId]: true}))
     try {
       const res = await fetch(
         `/api/courses/${courseId}/announcements/${announcementId}/comments`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ authorName: viewerName, message: draft }),
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({authorName: viewerName, message: draft})
         }
       )
       if (!res.ok) throw new Error('Failed to post comment')
 
-      setCommentDrafts(prev => ({ ...prev, [announcementId]: '' }))
+      setCommentDrafts(prev => ({...prev, [announcementId]: ''}))
 
-      // update only this announcement thread to reduce flicker
       const commentsRes = await fetch(
         `/api/courses/${courseId}/announcements/${announcementId}/comments`,
-        { cache: 'no-store' }
+        {cache: 'no-store'}
       )
       const comments = (await commentsRes.json()) as AnnouncementComment[]
       setThreads(prev =>
-        prev.map(thread =>
-          thread.id === announcementId ? { ...thread, comments } : thread
-        )
+        prev.map(thread => (thread.id === announcementId ? {...thread, comments} : thread))
       )
     } catch (err) {
       console.error(err)
-      setError('Could not post comment.')
+      setError(t('commentError'))
     } finally {
-      setPostingComment(prev => ({ ...prev, [announcementId]: false }))
+      setPostingComment(prev => ({...prev, [announcementId]: false}))
     }
   }
 
@@ -137,43 +140,39 @@ export function CourseAnnouncements({ courseId, viewerName, canCreate }: Props) 
     <div className="rounded-lg border bg-white p-4 shadow-sm space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Announcements</h2>
-          <p className="text-xs text-slate-500">
-            Share updates with the class; everyone can leave comments.
-          </p>
+          <h2 className="text-lg font-semibold">{t('title')}</h2>
+          <p className="text-xs text-slate-500">{t('description')}</p>
         </div>
       </div>
 
       {canCreate && (
         <div className="space-y-2 rounded-md border bg-slate-50/80 p-3">
-          <p className="text-xs font-semibold text-slate-700">New announcement</p>
+          <p className="text-xs font-semibold text-slate-700">{t('newTitle')}</p>
           <Textarea
             value={announcementDraft}
             onChange={e => setAnnouncementDraft(e.target.value)}
-            placeholder="Write something for the class..."
+            placeholder={t('announcementPlaceholder')}
             rows={3}
           />
           <div className="flex items-center justify-between text-xs text-slate-500">
-            <span>Posting as {viewerName}</span>
+            <span>{t('postingAs', {name: viewerName})}</span>
             <Button
               size="sm"
               onClick={handleCreate}
               disabled={postingAnnouncement || !announcementDraft.trim()}
             >
-              {postingAnnouncement ? 'Posting...' : 'Post announcement'}
+              {postingAnnouncement ? t('posting') : t('postAnnouncement')}
             </Button>
           </div>
         </div>
       )}
 
       {error && <p className="text-sm text-red-600">{error}</p>}
-      {loading && !error && (
-        <p className="text-sm text-slate-500">Loading announcements...</p>
-      )}
+      {loading && !error && <p className="text-sm text-slate-500">{t('loading')}</p>}
 
       {!loading && !error && sortedThreads.length === 0 && (
         <p className="text-sm text-slate-500">
-          No announcements yet. {canCreate ? 'Share the first update.' : 'Check back soon.'}
+          {canCreate ? t('emptyCreate') : t('emptyView')}
         </p>
       )}
 
@@ -217,20 +216,22 @@ export function CourseAnnouncements({ courseId, viewerName, canCreate }: Props) 
                   <Textarea
                     value={commentDrafts[thread.id] ?? ''}
                     onChange={e =>
-                      setCommentDrafts(prev => ({ ...prev, [thread.id]: e.target.value }))
+                      setCommentDrafts(prev => ({...prev, [thread.id]: e.target.value}))
                     }
-                    placeholder="Leave a comment..."
+                    placeholder={t('commentPlaceholder')}
                     rows={2}
                   />
                   <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span>Commenting as {viewerName}</span>
+                    <span>{t('commentingAs', {name: viewerName})}</span>
                     <Button
                       size="sm"
                       variant="secondary"
                       onClick={() => handleComment(thread.id)}
-                      disabled={postingComment[thread.id] || !(commentDrafts[thread.id] ?? '').trim()}
+                      disabled={
+                        postingComment[thread.id] || !(commentDrafts[thread.id] ?? '').trim()
+                      }
                     >
-                      {postingComment[thread.id] ? 'Posting...' : 'Post comment'}
+                      {postingComment[thread.id] ? t('commentPosting') : t('postComment')}
                     </Button>
                   </div>
                 </div>

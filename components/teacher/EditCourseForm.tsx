@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import type { Course } from '@/lib/mockData'
 
 type Props = {
@@ -9,6 +10,7 @@ type Props = {
 }
 
 export function EditCourseForm({ course }: Props) {
+  const t = useTranslations('teacher.courseDetail.edit')
   const router = useRouter()
   const [title, setTitle] = useState(course.title)
   const [description, setDescription] = useState(course.description)
@@ -33,13 +35,13 @@ export function EditCourseForm({ course }: Props) {
       })
       if (!res.ok) {
         const detail = await res.json().catch(() => null)
-        throw new Error(detail?.error || 'Failed to update')
+        throw new Error(detail?.error || t('updateError'))
       }
       setSuccess(true)
       router.refresh()
     } catch (err) {
       console.error(err)
-      setError(err instanceof Error ? err.message : 'Could not save changes.')
+      setError(err instanceof Error ? err.message : t('saveError'))
     } finally {
       setSaving(false)
     }
@@ -48,16 +50,16 @@ export function EditCourseForm({ course }: Props) {
   return (
     <div className="rounded-lg border bg-white p-4 shadow-sm space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Edit course info</h2>
-        {success && <span className="text-xs text-green-600">Saved</span>}
+        <h2 className="text-lg font-semibold">{t('title')}</h2>
+        {success && <span className="text-xs text-green-600">{t('saved')}</span>}
       </div>
       <p className="text-xs text-slate-500">
-        You can adjust the title, description, and grade. Course deletion is disabled for teachers.
+        {t('subtitle')}
       </p>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <div className="space-y-3 text-sm">
         <div className="space-y-1">
-          <label className="text-xs text-slate-600">Title</label>
+          <label className="text-xs text-slate-600">{t('titleLabel')}</label>
           <input
             type="text"
             value={title}
@@ -66,7 +68,7 @@ export function EditCourseForm({ course }: Props) {
           />
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-slate-600">Description</label>
+          <label className="text-xs text-slate-600">{t('descriptionLabel')}</label>
           <textarea
             value={description}
             onChange={e => setDescription(e.target.value)}
@@ -75,7 +77,7 @@ export function EditCourseForm({ course }: Props) {
           />
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-slate-600">Grade</label>
+          <label className="text-xs text-slate-600">{t('gradeLabel')}</label>
           <input
             type="number"
             min={1}
@@ -92,7 +94,7 @@ export function EditCourseForm({ course }: Props) {
           onClick={handleSave}
           disabled={saving}
         >
-          {saving ? 'Saving...' : 'Save changes'}
+          {saving ? t('saving') : t('save')}
         </button>
       </div>
     </div>

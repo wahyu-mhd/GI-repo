@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 type User = { id: string; name: string }
 type Enrollment = { id: string; courseId: string; studentId: string }
@@ -20,6 +21,7 @@ type Props = {
 }
 
 export function TeacherFeedbackPanel({ courseId, teacherName }: Props) {
+  const t = useTranslations('teacher.courseDetail.feedback')
   const [students, setStudents] = useState<User[]>([])
   const [enrollments, setEnrollments] = useState<Enrollment[]>([])
   const [feedback, setFeedback] = useState<Feedback[]>([])
@@ -40,7 +42,7 @@ export function TeacherFeedbackPanel({ courseId, teacherName }: Props) {
           fetch(`/api/feedback?courseId=${courseId}`, { cache: 'no-store' }),
         ])
         if (![studentsRes, enrollRes, feedbackRes].every(r => r.ok)) {
-          throw new Error('Failed to load feedback data')
+          throw new Error(t('loadError'))
         }
         setStudents(await studentsRes.json())
         setEnrollments(await enrollRes.json())
@@ -48,7 +50,7 @@ export function TeacherFeedbackPanel({ courseId, teacherName }: Props) {
         list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         setFeedback(list)
       } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : 'Could not load feedback')
+        setError(e instanceof Error ? e.message : t('loadError'))
       } finally {
         setLoading(false)
       }
@@ -78,13 +80,13 @@ export function TeacherFeedbackPanel({ courseId, teacherName }: Props) {
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Failed to send feedback')
+        throw new Error(data.error || t('sendError'))
       }
       const created = (await res.json()) as Feedback
       setFeedback(prev => [created, ...prev])
       setMessage('')
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Could not send feedback')
+      setError(e instanceof Error ? e.message : t('sendError'))
     } finally {
       setSaving(false)
     }
@@ -93,12 +95,10 @@ export function TeacherFeedbackPanel({ courseId, teacherName }: Props) {
   return (
     <div className="rounded-lg border bg-white p-4 shadow-sm space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Feedback to students</h2>
-        {loading && <span className="text-xs text-slate-500">Loading...</span>}
+        <h2 className="text-lg font-semibold">{t('title')}</h2>
+        {loading && <span className="text-xs text-slate-500">{t('loading')}</span>}
       </div>
-      <p className="text-xs text-slate-500">
-        Send a quick note to enrolled students. They will see it on their course page.
-      </p>
+      <p className="text-xs text-slate-500">{t('subtitle')}</p>
       {error && <p className="text-xs text-red-600">{error}</p>}
 
       <div className="flex flex-col gap-2 sm:flex-row">
@@ -107,7 +107,7 @@ export function TeacherFeedbackPanel({ courseId, teacherName }: Props) {
           value={selectedStudentId}
           onChange={e => setSelectedStudentId(e.target.value)}
         >
-          <option value="">Select student</option>
+          <option value="">{t('select')}</option>
           {courseStudents.map(s => (
             <option key={s.id} value={s.id}>
               {s.name}
@@ -119,7 +119,7 @@ export function TeacherFeedbackPanel({ courseId, teacherName }: Props) {
           onClick={handleSubmit}
           disabled={saving || !selectedStudentId || !message.trim()}
         >
-          {saving ? 'Sending...' : 'Send'}
+          {saving ? t('sending') : t('send')}
         </button>
       </div>
       <textarea
@@ -127,13 +127,13 @@ export function TeacherFeedbackPanel({ courseId, teacherName }: Props) {
         rows={3}
         value={message}
         onChange={e => setMessage(e.target.value)}
-        placeholder="E.g., Focus on fractions practice; review last quiz mistakes."
+        placeholder={t('placeholder')}
       />
 
       <div className="space-y-2">
-        <h3 className="text-sm font-semibold text-slate-700">Recent feedback</h3>
+        <h3 className="text-sm font-semibold text-slate-700">{t('recent')}</h3>
         {feedback.length === 0 && (
-          <p className="text-xs text-slate-500">No feedback yet.</p>
+          <p className="text-xs text-slate-500">{t('empty')}</p>
         )}
         <div className="space-y-2">
           {feedback.slice(0, 5).map(item => {
@@ -145,7 +145,7 @@ export function TeacherFeedbackPanel({ courseId, teacherName }: Props) {
                   <span>{new Date(item.createdAt).toLocaleString()}</span>
                 </div>
                 <p className="mt-1 text-slate-800">{item.message}</p>
-                <p className="text-xs text-slate-500 mt-1">From: {item.teacherName}</p>
+                <p className="text-xs text-slate-500 mt-1">{t('from', { name: item.teacherName })}</p>
               </div>
             )
           })}
