@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import type { Course } from '@/lib/mockData'
+import type { Course, Stage } from '@/lib/mockData'
 
 type Props = {
   course: Course
@@ -11,13 +11,21 @@ type Props = {
 
 export function EditCourseForm({ course }: Props) {
   const t = useTranslations('teacher.courseDetail.edit')
+  const tStage = useTranslations('teacher.courseDetail.stage')
   const router = useRouter()
   const [title, setTitle] = useState(course.title)
   const [description, setDescription] = useState(course.description)
   const [grade, setGrade] = useState(course.grade)
+  const [stage, setStage] = useState<Stage>(course.stage)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+
+  const stageOptions: { value: Stage; label: string }[] = [
+    { value: 'elementary', label: tStage('elementary') },
+    { value: 'junior', label: tStage('junior') },
+    { value: 'senior', label: tStage('senior') },
+  ]
 
   const handleSave = async () => {
     setSaving(true)
@@ -31,6 +39,7 @@ export function EditCourseForm({ course }: Props) {
           title,
           description,
           grade: Number(grade),
+          stage,
         }),
       })
       if (!res.ok) {
@@ -48,7 +57,7 @@ export function EditCourseForm({ course }: Props) {
   }
 
   return (
-    <div className="rounded-lg border bg-white p-4 shadow-sm space-y-3">
+    <div className="flex h-full flex-col space-y-3 rounded-lg border bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">{t('title')}</h2>
         {success && <span className="text-xs text-green-600">{t('saved')}</span>}
@@ -76,19 +85,35 @@ export function EditCourseForm({ course }: Props) {
             rows={3}
           />
         </div>
-        <div className="space-y-1">
-          <label className="text-xs text-slate-600">{t('gradeLabel')}</label>
-          <input
-            type="number"
-            min={1}
-            max={12}
-            value={grade}
-            onChange={e => setGrade(Number(e.target.value))}
-            className="w-full rounded border px-3 py-2"
-          />
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="space-y-1">
+            <label className="text-xs text-slate-600">{t('gradeLabel')}</label>
+            <input
+              type="number"
+              min={1}
+              max={12}
+              value={grade}
+              onChange={e => setGrade(Number(e.target.value))}
+              className="w-full rounded border px-3 py-2"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-slate-600">{t('stageLabel')}</label>
+            <select
+              value={stage}
+              onChange={e => setStage(e.target.value as Stage)}
+              className="w-full rounded border px-3 py-2"
+            >
+              {stageOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
-      <div className="flex justify-end">
+      <div className="flex justify-end pt-1">
         <button
           className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
           onClick={handleSave}

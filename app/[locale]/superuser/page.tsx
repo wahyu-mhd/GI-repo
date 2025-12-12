@@ -6,6 +6,7 @@ import {Link} from '@/navigation'
 import {loadMockSession, clearMockSession, type SessionUser} from '@/lib/sessionMock'
 import type {User, Enrollment} from '@/lib/userStore'
 import type {Course} from '@/lib/mockData'
+import type {CourseTeacher} from '@/lib/courseTeacherStore'
 
 export default function SuperuserDashboardPage() {
   const t = useTranslations('superuser')
@@ -15,9 +16,12 @@ export default function SuperuserDashboardPage() {
   const [students, setStudents] = useState<User[]>([])
   const [enrollments, setEnrollments] = useState<Enrollment[]>([])
   const [courses, setCourses] = useState<Course[]>([])
+  const [courseTeachers, setCourseTeachers] = useState<CourseTeacher[]>([])
   const [siteSettings, setSiteSettings] = useState<{heroBadge: string} | null>(null)
   const [selectedCourse, setSelectedCourse] = useState<string>('')
   const [selectedStudent, setSelectedStudent] = useState<string>('')
+  const [selectedCourseForTeacher, setSelectedCourseForTeacher] = useState<string>('')
+  const [selectedTeacherForCourse, setSelectedTeacherForCourse] = useState<string>('')
   const [studentQuery, setStudentQuery] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -26,6 +30,8 @@ export default function SuperuserDashboardPage() {
   const [removingUser, setRemovingUser] = useState<string | null>(null)
   const [removingEnrollment, setRemovingEnrollment] = useState<string | null>(null)
   const [removingCourse, setRemovingCourse] = useState<string | null>(null)
+  const [addingCourseTeacher, setAddingCourseTeacher] = useState(false)
+  const [removingCourseTeacher, setRemovingCourseTeacher] = useState<string | null>(null)
   const [creatingUser, setCreatingUser] = useState(false)
   const [savingSite, setSavingSite] = useState(false)
   const [newUser, setNewUser] = useState<{
@@ -49,14 +55,15 @@ export default function SuperuserDashboardPage() {
     setLoading(true)
     setError(null)
     try {
-      const [teachersRes, studentsRes, enrollRes, siteRes] = await Promise.all([
+      const [teachersRes, studentsRes, enrollRes, siteRes, courseTeachersRes] = await Promise.all([
         fetch('/api/superuser/teachers', {cache: 'no-store'}),
         fetch('/api/superuser/students', {cache: 'no-store'}),
         fetch('/api/superuser/enrollments', {cache: 'no-store'}),
-        fetch('/api/site', {cache: 'no-store'})
+        fetch('/api/site', {cache: 'no-store'}),
+        fetch('/api/superuser/course-teachers', {cache: 'no-store'}),
       ])
       const coursesRes = await fetch('/api/courses', {cache: 'no-store'})
-      if (![teachersRes, studentsRes, enrollRes, coursesRes, siteRes].every(r => r.ok)) {
+      if (![teachersRes, studentsRes, enrollRes, coursesRes, siteRes, courseTeachersRes].every(r => r.ok)) {
         throw new Error('Failed to load data')
       }
       setTeachers(await teachersRes.json())
@@ -64,6 +71,7 @@ export default function SuperuserDashboardPage() {
       setEnrollments(await enrollRes.json())
       setCourses(await coursesRes.json())
       setSiteSettings(await siteRes.json())
+      setCourseTeachers(await courseTeachersRes.json())
     } catch (err) {
       console.error(err)
       setError(t('loadError'))
@@ -86,6 +94,15 @@ export default function SuperuserDashboardPage() {
           (s.email || '').toLowerCase().includes(studentQuery.toLowerCase())
       ),
     [students, studentQuery]
+  )
+
+  const courseTeacherLookup = useMemo(
+    () =>
+      courseTeachers.reduce<Record<string, CourseTeacher[]>>((acc, entry) => {
+        acc[entry.courseId] = acc[entry.courseId] ? [...acc[entry.courseId], entry] : [entry]
+        return acc
+      }, {}),
+    [courseTeachers]
   )
 
   const handleToggle = async (id: string, value: boolean) => {
@@ -141,6 +158,30 @@ export default function SuperuserDashboardPage() {
     }
   }
 
+  const handleAddTeacherToCourse = async () => {
+    if (!selectedCourseForTeacher || !selectedTeacherForCourse) return
+    setAddingCourseTeacher(true)
+    try {
+      const res = await fetch('/api/superuser/course-teachers', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          courseId: selectedCourseForTeacher,
+          teacherId: selectedTeacherForCourse,
+        }),
+      })
+      if (!res.ok) throw new Error('failed')
+      setSelectedCourseForTeacher('')
+      setSelectedTeacherForCourse('')
+      await loadData()
+    } catch (err) {
+      console.error(err)
+      setError(t('addCourseTeacherError'))
+    } finally {
+      setAddingCourseTeacher(false)
+    }
+  }
+
   const handleRemoveEnrollment = async (id: string) => {
     setRemovingEnrollment(id)
     try {
@@ -152,6 +193,20 @@ export default function SuperuserDashboardPage() {
       setError(t('removeEnrollmentError'))
     } finally {
       setRemovingEnrollment(null)
+    }
+  }
+
+  const handleRemoveCourseTeacher = async (id: string) => {
+    setRemovingCourseTeacher(id)
+    try {
+      const res = await fetch(`/api/superuser/course-teachers/${id}`, {method: 'DELETE'})
+      if (!res.ok) throw new Error('failed')
+      await loadData()
+    } catch (err) {
+      console.error(err)
+      setError(t('removeCourseTeacherError'))
+    } finally {
+      setRemovingCourseTeacher(null)
     }
   }
 
@@ -470,6 +525,76 @@ export default function SuperuserDashboardPage() {
       </div>
 
       <div className="rounded-lg border bg-white p-4 shadow-sm space-y-3">
+        <h2 className="text-lg font-semibold">{t('assignTeacherTitle')}</h2>
+        <p className="text-xs text-slate-500">{t('assignTeacherHelp')}</p>
+        <div className="flex flex-col gap-3 md:flex-row md:items-center">
+          <select
+            className="rounded border px-3 py-2 text-sm"
+            value={selectedTeacherForCourse}
+            onChange={e => setSelectedTeacherForCourse(e.target.value)}
+          >
+            <option value="">{t('selectTeacher')}</option>
+            {teachers
+              .filter(tchr => tchr.role === 'teacher')
+              .map(tchr => (
+                <option key={tchr.id} value={tchr.id}>
+                  {tchr.name}
+                </option>
+              ))}
+          </select>
+          <select
+            className="rounded border px-3 py-2 text-sm"
+            value={selectedCourseForTeacher}
+            onChange={e => setSelectedCourseForTeacher(e.target.value)}
+          >
+            <option value="">{t('selectCourse')}</option>
+            {courses.map(c => (
+              <option key={c.id} value={c.id}>
+                {c.title}
+              </option>
+            ))}
+          </select>
+          <button
+            className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+            onClick={handleAddTeacherToCourse}
+            disabled={!selectedCourseForTeacher || !selectedTeacherForCourse || addingCourseTeacher}
+          >
+            {addingCourseTeacher ? t('addingTeacher') : t('addTeacher')}
+          </button>
+        </div>
+        <div className="text-xs text-slate-500">
+          {t('currentCourseTeachers', {count: courseTeachers.length})}
+        </div>
+        <div className="space-y-2 text-sm">
+          {courseTeachers.map(entry => {
+            const teacher = teachers.find(tchr => tchr.id === entry.teacherId)
+            const course = courses.find(c => c.id === entry.courseId)
+            return (
+              <div
+                key={entry.id}
+                className="flex items-center justify-between rounded border px-3 py-2"
+              >
+                <div>
+                  <div className="font-medium">{teacher?.name ?? entry.teacherId}</div>
+                  <div className="text-xs text-slate-500">{course?.title ?? entry.courseId}</div>
+                </div>
+                <button
+                  className="text-red-600 text-xs hover:underline"
+                  onClick={() => handleRemoveCourseTeacher(entry.id)}
+                  disabled={removingCourseTeacher === entry.id}
+                >
+                  {removingCourseTeacher === entry.id ? t('removing') : t('remove')}
+                </button>
+              </div>
+            )
+          })}
+          {courseTeachers.length === 0 && (
+            <p className="text-xs text-slate-500">{t('noCourseTeachers')}</p>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-lg border bg-white p-4 shadow-sm space-y-3">
         <h2 className="text-lg font-semibold">{t('announcementTitle')}</h2>
         <p className="text-xs text-slate-500">{t('announcementHelp')}</p>
         <input
@@ -494,26 +619,49 @@ export default function SuperuserDashboardPage() {
         <h2 className="text-lg font-semibold">{t('coursesTitle')}</h2>
         <p className="text-xs text-slate-500">{t('coursesHelp')}</p>
         <div className="space-y-2 text-sm">
-          {courses.map(c => (
-            <div key={c.id} className="flex items-center justify-between rounded border px-3 py-2">
-              <div>
-                <div className="font-medium">{c.title}</div>
-                <div className="text-xs text-slate-500">{c.description}</div>
+          {courses.map(c => {
+            const assigned = courseTeacherLookup[c.id] ?? []
+            return (
+              <div key={c.id} className="flex items-center justify-between rounded border px-3 py-2">
+                <div>
+                  <div className="font-medium">{c.title}</div>
+                  <div className="text-xs text-slate-500">{c.description}</div>
+                  <div className="mt-1 text-xs text-slate-500">
+                    {t('primaryTeacher', {name: c.teacherName})}
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-600">
+                    {assigned.length > 0 ? (
+                      assigned.map(entry => {
+                        const teacher = teachers.find(tchr => tchr.id === entry.teacherId)
+                        return (
+                          <span
+                            key={entry.id}
+                            className="rounded-full bg-slate-100 px-2 py-1"
+                          >
+                            {teacher?.name ?? entry.teacherId}
+                          </span>
+                        )
+                      })
+                    ) : (
+                      <span className="text-slate-400">{t('noAdditionalTeachers')}</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Link href={`/teacher/courses/${c.id}/lessons`} className="text-blue-600 text-xs hover:underline">
+                    {t('manageLessons')}
+                  </Link>
+                  <button
+                    className="text-red-600 text-xs hover:underline"
+                    onClick={() => handleDeleteCourse(c.id)}
+                    disabled={removingCourse === c.id}
+                  >
+                    {removingCourse === c.id ? t('deletingCourse') : t('deleteCourse')}
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <Link href={`/teacher/courses/${c.id}/lessons`} className="text-blue-600 text-xs hover:underline">
-                  {t('manageLessons')}
-                </Link>
-                <button
-                  className="text-red-600 text-xs hover:underline"
-                  onClick={() => handleDeleteCourse(c.id)}
-                  disabled={removingCourse === c.id}
-                >
-                  {removingCourse === c.id ? t('deletingCourse') : t('deleteCourse')}
-                </button>
-              </div>
-            </div>
-          ))}
+            )
+          })}
           {courses.length === 0 && <p className="text-xs text-slate-500">{t('noCourses')}</p>}
         </div>
       </div>

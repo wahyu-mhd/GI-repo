@@ -86,6 +86,9 @@ export default async function TeacherCourseDetailPage({ params }: Props) {
                     {t('manageQuizzes')}
                 </Link>
             </div>
+            <div className="md:col-span-2">
+              <EditCourseForm course={course} />
+            </div>
             </div>
 
             <CourseAnnouncements
@@ -95,8 +98,6 @@ export default async function TeacherCourseDetailPage({ params }: Props) {
             />
 
             <TeacherFeedbackPanel courseId={course.id} teacherName={currentTeacherName} />
-
-            <EditCourseForm course={course} />
         </section>
     )
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCourseByIdFile, updateCourseFile } from '@/lib/courseFileStore'
+import type { Stage } from '@/lib/mockData'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -26,12 +27,14 @@ export async function PUT(
     title: string
     description: string
     grade: number
+    stage: Stage
   }>
 
   const hasEditableField =
     body.title !== undefined ||
     body.description !== undefined ||
-    body.grade !== undefined
+    body.grade !== undefined ||
+    body.stage !== undefined
 
   if (!hasEditableField) {
     return NextResponse.json({ error: 'No editable fields provided' }, { status: 400 })
@@ -48,15 +51,26 @@ export async function PUT(
     }
   }
 
+  const validStages: Stage[] = ['elementary', 'junior', 'senior']
+  if (body.stage !== undefined && !validStages.includes(body.stage)) {
+    return NextResponse.json(
+      { error: 'Stage must be one of elementary, junior, or senior' },
+      { status: 400 }
+    )
+  }
+
   const nextGrade =
     body.grade !== undefined
       ? Number(body.grade)
       : existing.grade
 
+  const nextStage = body.stage ?? existing.stage
+
   const updated = await updateCourseFile(courseId, {
     title: body.title?.trim() ?? existing.title,
     description: body.description?.trim() ?? existing.description,
     grade: nextGrade,
+    stage: nextStage,
   })
 
   if (!updated) {
