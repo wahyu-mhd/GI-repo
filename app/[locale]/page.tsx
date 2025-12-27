@@ -1,7 +1,9 @@
 import { getTranslations, setRequestLocale } from "next-intl/server"
+import Image from "next/image"
 import { Link } from "@/navigation"
 import { BookOpen, Trophy, TrendingUp, GraduationCap, School, User, ArrowRight, CheckCircle2 } from "lucide-react"
 import { readSiteSettings } from "@/lib/siteFileStore"
+import { readNews, type NewsItem } from "@/lib/newsFileStore"
 
 // Shadcn Imports
 import { Button } from "@/components/ui/button"
@@ -20,7 +22,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   // Bind translations explicitly to the current locale to avoid falling back to default
   const t = await getTranslations({ locale, namespace: 'home' })
+  const newsT = await getTranslations({ locale, namespace: 'news' })
   const site = await readSiteSettings()
+  const newsItems = (await readNews()).slice(0, 3)
 
   const features = [
     { icon: <BookOpen className="w-5 h-5 text-blue-600" />, title: t('features.learn.title'), desc: t('features.learn.desc') },
@@ -72,7 +76,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             </div>
 
             <div className="flex items-center gap-4 text-sm text-slate-500 pt-2">
-              <div className="flex -space-x-3">
+              {/* <div className="flex -space-x-3">
                 <Avatar className="border-2 border-white w-8 h-8">
                   <AvatarFallback>S1</AvatarFallback>
                 </Avatar>
@@ -82,7 +86,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 <Avatar className="border-2 border-white w-8 h-8">
                   <AvatarFallback>S3</AvatarFallback>
                 </Avatar>
-              </div>
+              </div> */}
               {/* <p>Join 10,000+ others</p> */}
             </div>
           </div>
@@ -151,6 +155,29 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           </div>
         </section>
 
+        {/* --- NEWS / UPDATES --- */}
+        <section className="space-y-8">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold tracking-tight">{newsT('title')}</h2>
+              <p className="text-slate-500">{newsT('subtitle')}</p>
+            </div>
+            <Button asChild variant="outline" className="w-full sm:w-auto">
+              <Link href="/news">{newsT('viewAll')}</Link>
+            </Button>
+          </div>
+
+          {newsItems.length > 0 ? (
+            <div className="grid gap-4">
+              {newsItems.map((item) => (
+                <NewsCard key={item.id} item={item} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500">{newsT('empty')}</p>
+          )}
+        </section>
+
         {/* --- SCHOOL LEVELS --- */}
         <section className="space-y-10">
           <h2 className="text-2xl font-bold tracking-tight">{t('levels.title')}</h2>
@@ -193,5 +220,48 @@ function LevelCard({ title, grades, icon }: { title: string; grades: string; ico
         <p className="text-sm text-slate-500">{grades}</p>
       </div>
     </Card>
+  )
+}
+
+function NewsCard({ item }: { item: NewsItem }) {
+  const cardContent = (
+    <Card className="group hover:shadow-md transition-shadow duration-300 border-slate-200">
+      <CardContent className="flex gap-4 p-4">
+        <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-slate-100 shrink-0">
+          <Image src={item.image} alt={item.title} fill sizes="96px" className="object-cover" />
+        </div>
+
+        <div className="flex-1 space-y-2">
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-1">
+              <h3 className="text-base font-semibold text-slate-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                {item.title}
+              </h3>
+              <p className="text-sm text-slate-500 line-clamp-2">{item.excerpt}</p>
+            </div>
+            {item.tag && <Badge variant="secondary">{item.tag}</Badge>}
+          </div>
+          {item.date && <p className="text-xs text-slate-400">{item.date}</p>}
+        </div>
+      </CardContent>
+    </Card>
+  )
+
+  if (!item.href) {
+    return cardContent
+  }
+
+  if (/^https?:\/\//i.test(item.href)) {
+    return (
+      <a href={item.href} target="_blank" rel="noreferrer" className="block group">
+        {cardContent}
+      </a>
+    )
+  }
+
+  return (
+    <Link href={item.href} className="block group">
+      {cardContent}
+    </Link>
   )
 }

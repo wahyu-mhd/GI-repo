@@ -297,6 +297,34 @@
     "commentPosting": "Posting...",
     "postComment": "Post comment"
   },
+  "questions": {
+    "title": "Course Q&A",
+    "descriptionStudent": "Ask the teacher a question. Public replies are visible to the class.",
+    "descriptionTeacher": "Answer student questions and choose whether replies are private or public.",
+    "askTitle": "Ask a question",
+    "askPlaceholder": "Type your question for the teacher...",
+    "postingAs": "Posting as {name}",
+    "posting": "Posting...",
+    "postQuestion": "Submit question",
+    "loadError": "Could not load questions.",
+    "createError": "Could not submit question.",
+    "replyError": "Could not send reply.",
+    "loading": "Loading questions...",
+    "emptyStudent": "No questions yet. Ask the first one.",
+    "emptyTeacher": "No questions yet.",
+    "replyPlaceholder": "Write a reply...",
+    "replyingAs": "Replying as {name}",
+    "postReply": "Send reply",
+    "replying": "Sending...",
+    "visibilityLabel": "Visibility",
+    "visibilityPublic": "Public",
+    "visibilityPrivate": "Private",
+    "replyPublicTag": "Public reply",
+    "replyPrivateTag": "Private reply",
+    "askedBy": "Asked by {name}",
+    "askedByYou": "Asked by you",
+    "noReply": "No reply yet."
+  },
   "common": {
     "loading": "Loading...",
     "error": "Something went wrong"
@@ -366,6 +394,14 @@
     "endBeforeStart": "End date/time must be after start date/time",
     "saveQuiz": "Save Quiz"
   },
+  "news": {
+    "title": "Latest Updates",
+    "subtitle": "News, releases, and tips to help your learners thrive.",
+    "viewAll": "View all",
+    "empty": "No updates yet. Check back soon.",
+    "back": "Back to all updates",
+    "noContent": "No full article yet. Check back soon."
+  },
   "superuser": {
     "title": "Superuser Dashboard",
     "subtitle": "Manage teachers, students, and enrollments.",
@@ -431,6 +467,30 @@
     "manageLessons": "Manage lessons",
     "deleteCourse": "Delete",
     "deletingCourse": "Deleting...",
-    "noCourses": "No courses."
+    "noCourses": "No courses.",
+    "news": {
+      "title": "News & Updates",
+      "subtitle": "Control the cards displayed on the public landing page.",
+      "titlePlaceholder": "Title",
+      "tagPlaceholder": "Tag (optional)",
+      "datePlaceholder": "Date (required)",
+      "imagePlaceholder": "Image path (e.g., /globe.svg)",
+      "hrefPlaceholder": "Link to full post (optional)",
+      "excerptPlaceholder": "Short description for the card",
+      "richLabel": "Rich text content",
+      "richPlaceholder": "Write the full update here...",
+      "reset": "Reset",
+      "add": "Add news",
+      "update": "Update news",
+      "saving": "Saving...",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleting": "Deleting...",
+      "empty": "No news yet.",
+      "cancelEdit": "Cancel edit",
+      "requiredError": "News title, excerpt, image, and date are required.",
+      "saveError": "Could not save news item.",
+      "deleteError": "Could not delete news item."
+    }
   }
 }

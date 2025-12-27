@@ -1,0 +1,16 @@
+[
+  {
+    "id": "question-1766578654850-0",
+    "createdAt": "2025-12-24T12:17:34.850Z",
+    "courseId": "course-1",
+    "studentId": "user-student-1",
+    "studentName": "Student User",
+    "message": "hi",
+    "reply": {
+      "message": "okok",
+      "visibility": "private",
+      "teacherName": "Wahyu",
+      "createdAt": "2025-12-24T12:18:01.365Z"
+    }
+  }
+]

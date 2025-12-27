@@ -9,6 +9,7 @@ import { getCourseByIdFile } from '@/lib/courseFileStore'
 import { CourseAnnouncements } from '@/components/announcements/CourseAnnouncements'
 import { EditCourseForm } from '@/components/teacher/EditCourseForm'
 import { TeacherFeedbackPanel } from '@/components/teacher/TeacherFeedbackPanel'
+import { CourseQuestions } from '@/components/questions/CourseQuestions'
 
 export const dynamic = 'force-dynamic'
 
@@ -95,6 +96,12 @@ export default async function TeacherCourseDetailPage({ params }: Props) {
               courseId={course.id}
               viewerName={currentTeacherName}
               canCreate
+            />
+
+            <CourseQuestions
+              courseId={course.id}
+              viewerRole="teacher"
+              viewerName={currentTeacherName}
             />
 
             <TeacherFeedbackPanel courseId={course.id} teacherName={currentTeacherName} />

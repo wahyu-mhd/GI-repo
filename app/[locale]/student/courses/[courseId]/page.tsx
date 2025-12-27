@@ -7,6 +7,7 @@ import { Link } from '@/navigation'
 import { Course, Lesson, Module, Quiz } from '@/lib/mockData'
 import { loadMockSession } from '@/lib/sessionMock'
 import { CourseAnnouncements } from '@/components/announcements/CourseAnnouncements'
+import { CourseQuestions } from '@/components/questions/CourseQuestions'
 
 type Props = {
   params: Promise<{ courseId: string }>
@@ -155,6 +156,12 @@ export default function StudentCourseDetailPage({ params }: Props) {
       <div className="grid gap-6 md:grid-cols-[2fr,1fr]">
         <div className="space-y-3">
           <CourseAnnouncements courseId={course.id} viewerName={viewerName} />
+          <CourseQuestions
+            courseId={course.id}
+            viewerRole="student"
+            viewerName={viewerName}
+            viewerId={studentId}
+          />
 
           <h2 className="font-semibold">{t('modulesHeading')}</h2>
           {modules.map(module => {

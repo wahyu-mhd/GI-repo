@@ -297,6 +297,34 @@
     "commentPosting": "Mengirim...",
     "postComment": "Kirim komentar"
   },
+  "questions": {
+    "title": "Tanya Jawab Kelas",
+    "descriptionStudent": "Ajukan pertanyaan ke guru. Balasan publik terlihat oleh semua siswa di kelas.",
+    "descriptionTeacher": "Jawab pertanyaan siswa dan pilih apakah balasan privat atau publik.",
+    "askTitle": "Ajukan pertanyaan",
+    "askPlaceholder": "Tulis pertanyaanmu untuk guru...",
+    "postingAs": "Mengirim sebagai {name}",
+    "posting": "Mengirim...",
+    "postQuestion": "Kirim pertanyaan",
+    "loadError": "Tidak dapat memuat pertanyaan.",
+    "createError": "Tidak dapat mengirim pertanyaan.",
+    "replyError": "Tidak dapat mengirim balasan.",
+    "loading": "Memuat pertanyaan...",
+    "emptyStudent": "Belum ada pertanyaan. Mulai ajukan yang pertama.",
+    "emptyTeacher": "Belum ada pertanyaan.",
+    "replyPlaceholder": "Tulis balasan...",
+    "replyingAs": "Membalas sebagai {name}",
+    "postReply": "Kirim balasan",
+    "replying": "Mengirim...",
+    "visibilityLabel": "Visibilitas",
+    "visibilityPublic": "Publik",
+    "visibilityPrivate": "Privat",
+    "replyPublicTag": "Balasan publik",
+    "replyPrivateTag": "Balasan privat",
+    "askedBy": "Ditanya oleh {name}",
+    "askedByYou": "Ditanya oleh kamu",
+    "noReply": "Belum ada balasan."
+  },
   "common": {
     "loading": "Memuat...",
     "error": "Terjadi kesalahan"
@@ -366,6 +394,14 @@
     "endBeforeStart": "Waktu selesai harus setelah waktu mulai",
     "saveQuiz": "Simpan Kuis"
   },
+  "news": {
+    "title": "Pembaruan Terbaru",
+    "subtitle": "Kabar, rilis, dan tips untuk membantu siswa berkembang.",
+    "viewAll": "Lihat semua",
+    "empty": "Belum ada pembaruan. Coba lagi nanti.",
+    "back": "Kembali ke semua pembaruan",
+    "noContent": "Belum ada artikel lengkap. Coba lagi nanti."
+  },
   "superuser": {
     "title": "Dasbor Superuser",
     "subtitle": "Kelola guru, siswa, dan pendaftaran.",
@@ -431,6 +467,31 @@
     "manageLessons": "Kelola pelajaran",
     "deleteCourse": "Hapus",
     "deletingCourse": "Menghapus...",
-    "noCourses": "Tidak ada kursus."
+    "noCourses": "Tidak ada kursus.",
+    
+    "news": {
+      "title": "Berita & Pembaruan",
+      "subtitle": "Atur kartu yang tampil di halaman landing publik.",
+      "titlePlaceholder": "Judul",
+      "tagPlaceholder": "Tag (opsional)",
+      "datePlaceholder": "Tanggal (wajib)",
+      "imagePlaceholder": "Path gambar (mis. /globe.svg)",
+      "hrefPlaceholder": "Tautan ke artikel lengkap (opsional)",
+      "excerptPlaceholder": "Deskripsi singkat untuk kartu",
+      "richLabel": "Konten rich text",
+      "richPlaceholder": "Tulis pembaruan lengkap di sini...",
+      "reset": "Atur ulang",
+      "add": "Tambah berita",
+      "update": "Perbarui berita",
+      "saving": "Menyimpan...",
+      "edit": "Ubah",
+      "delete": "Hapus",
+      "deleting": "Menghapus...",
+      "empty": "Belum ada berita.",
+      "cancelEdit": "Batalkan edit",
+      "requiredError": "Judul, ringkasan, gambar, dan tanggal wajib diisi.",
+      "saveError": "Tidak dapat menyimpan berita.",
+      "deleteError": "Tidak dapat menghapus berita."
+    }
   }
 }

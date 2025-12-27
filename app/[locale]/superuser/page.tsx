@@ -7,6 +7,8 @@ import {loadMockSession, clearMockSession, type SessionUser} from '@/lib/session
 import type {User, Enrollment} from '@/lib/userStore'
 import type {Course} from '@/lib/mockData'
 import type {CourseTeacher} from '@/lib/courseTeacherStore'
+import type {NewsItem} from '@/lib/newsFileStore'
+import {RichTextEditor} from '@/components/editor/RichTextEditor'
 
 export default function SuperuserDashboardPage() {
   const t = useTranslations('superuser')
@@ -34,6 +36,27 @@ export default function SuperuserDashboardPage() {
   const [removingCourseTeacher, setRemovingCourseTeacher] = useState<string | null>(null)
   const [creatingUser, setCreatingUser] = useState(false)
   const [savingSite, setSavingSite] = useState(false)
+  const [newsItems, setNewsItems] = useState<NewsItem[]>([])
+  const [newsForm, setNewsForm] = useState<{
+    title: string
+    excerpt: string
+    image: string
+    href: string
+    tag: string
+    date: string
+    content: string
+  }>({
+    title: '',
+    excerpt: '',
+    image: '/globe.svg',
+    href: '',
+    tag: '',
+    date: '',
+    content: '',
+  })
+  const [editingNewsId, setEditingNewsId] = useState<string | null>(null)
+  const [savingNews, setSavingNews] = useState(false)
+  const [removingNews, setRemovingNews] = useState<string | null>(null)
   const [newUser, setNewUser] = useState<{
     role: 'student' | 'teacher'
     name: string
@@ -55,15 +78,16 @@ export default function SuperuserDashboardPage() {
     setLoading(true)
     setError(null)
     try {
-      const [teachersRes, studentsRes, enrollRes, siteRes, courseTeachersRes] = await Promise.all([
+      const [teachersRes, studentsRes, enrollRes, siteRes, courseTeachersRes, newsRes] = await Promise.all([
         fetch('/api/superuser/teachers', {cache: 'no-store'}),
         fetch('/api/superuser/students', {cache: 'no-store'}),
         fetch('/api/superuser/enrollments', {cache: 'no-store'}),
         fetch('/api/site', {cache: 'no-store'}),
         fetch('/api/superuser/course-teachers', {cache: 'no-store'}),
+        fetch('/api/superuser/news', {cache: 'no-store'}),
       ])
       const coursesRes = await fetch('/api/courses', {cache: 'no-store'})
-      if (![teachersRes, studentsRes, enrollRes, coursesRes, siteRes, courseTeachersRes].every(r => r.ok)) {
+      if (![teachersRes, studentsRes, enrollRes, coursesRes, siteRes, courseTeachersRes, newsRes].every(r => r.ok)) {
         throw new Error('Failed to load data')
       }
       setTeachers(await teachersRes.json())
@@ -72,6 +96,7 @@ export default function SuperuserDashboardPage() {
       setCourses(await coursesRes.json())
       setSiteSettings(await siteRes.json())
       setCourseTeachers(await courseTeachersRes.json())
+      setNewsItems(await newsRes.json())
     } catch (err) {
       console.error(err)
       setError(t('loadError'))
@@ -276,6 +301,84 @@ export default function SuperuserDashboardPage() {
       setError(t('saveAnnouncementError'))
     } finally {
       setSavingSite(false)
+    }
+  }
+
+  const resetNewsForm = () =>
+    setNewsForm({
+      title: '',
+      excerpt: '',
+      image: '/globe.svg',
+      href: '',
+      tag: '',
+      date: '',
+      content: '',
+    })
+
+  const handleSaveNews = async () => {
+    if (!newsForm.title.trim() || !newsForm.excerpt.trim() || !newsForm.image.trim() || !newsForm.date.trim()) {
+      setError(t('news.requiredError'))
+      return
+    }
+    setSavingNews(true)
+    setError(null)
+    try {
+      const url = editingNewsId ? `/api/superuser/news/${editingNewsId}` : '/api/superuser/news'
+      const method = editingNewsId ? 'PUT' : 'POST'
+      const res = await fetch(url, {
+        method,
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          title: newsForm.title.trim(),
+          excerpt: newsForm.excerpt.trim(),
+          image: newsForm.image.trim(),
+          href: newsForm.href.trim() || undefined,
+          tag: newsForm.tag.trim() || undefined,
+          date: newsForm.date.trim(),
+          content: newsForm.content,
+        }),
+      })
+      if (!res.ok) throw new Error('failed')
+      await loadData()
+      resetNewsForm()
+      setEditingNewsId(null)
+    } catch (err) {
+      console.error(err)
+      setError(t('news.saveError'))
+    } finally {
+      setSavingNews(false)
+    }
+  }
+
+  const handleEditNews = (item: NewsItem) => {
+    setEditingNewsId(item.id)
+    setNewsForm({
+      title: item.title,
+      excerpt: item.excerpt,
+      image: item.image,
+      href: item.href ?? '',
+      tag: item.tag ?? '',
+      date: item.date ?? '',
+      content: item.content ?? '',
+    })
+  }
+
+  const handleDeleteNews = async (id: string) => {
+    setRemovingNews(id)
+    setError(null)
+    try {
+      const res = await fetch(`/api/superuser/news/${id}`, {method: 'DELETE'})
+      if (!res.ok) throw new Error('failed')
+      if (editingNewsId === id) {
+        setEditingNewsId(null)
+        resetNewsForm()
+      }
+      await loadData()
+    } catch (err) {
+      console.error(err)
+      setError(t('news.deleteError'))
+    } finally {
+      setRemovingNews(null)
     }
   }
 
@@ -612,6 +715,132 @@ export default function SuperuserDashboardPage() {
           >
             {savingSite ? t('saving') : t('saveAnnouncement')}
           </button>
+        </div>
+      </div>
+
+      <div className="rounded-lg border bg-white p-4 shadow-sm space-y-4">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-semibold">{t('news.title')}</h2>
+            <p className="text-xs text-slate-500">{t('news.subtitle')}</p>
+          </div>
+          {editingNewsId && (
+            <button
+              className="text-xs text-blue-600 hover:underline"
+              onClick={() => {
+                setEditingNewsId(null)
+                resetNewsForm()
+              }}
+            >
+              {t('news.cancelEdit')}
+            </button>
+          )}
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-[1.3fr_1fr]">
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <input
+                type="text"
+                className="rounded border px-3 py-2 text-sm"
+                placeholder={t('news.titlePlaceholder')}
+                value={newsForm.title}
+                onChange={e => setNewsForm(prev => ({...prev, title: e.target.value}))}
+              />
+              <input
+                type="text"
+                className="rounded border px-3 py-2 text-sm"
+                placeholder={t('news.tagPlaceholder')}
+                value={newsForm.tag}
+                onChange={e => setNewsForm(prev => ({...prev, tag: e.target.value}))}
+              />
+              <input
+                type="date"
+                className="rounded border px-3 py-2 text-sm"
+                placeholder={t('news.datePlaceholder')}
+                value={newsForm.date}
+                onChange={e => setNewsForm(prev => ({...prev, date: e.target.value}))}
+                required
+              />
+              <input
+                type="text"
+                className="rounded border px-3 py-2 text-sm"
+                placeholder={t('news.imagePlaceholder')}
+                value={newsForm.image}
+                onChange={e => setNewsForm(prev => ({...prev, image: e.target.value}))}
+              />
+            </div>
+            <input
+              type="text"
+              className="w-full rounded border px-3 py-2 text-sm"
+              placeholder={t('news.hrefPlaceholder')}
+              value={newsForm.href}
+              onChange={e => setNewsForm(prev => ({...prev, href: e.target.value}))}
+            />
+            <textarea
+              className="w-full rounded border px-3 py-2 text-sm"
+              placeholder={t('news.excerptPlaceholder')}
+              rows={2}
+              value={newsForm.excerpt}
+              onChange={e => setNewsForm(prev => ({...prev, excerpt: e.target.value}))}
+            />
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-slate-600">{t('news.richLabel')}</p>
+              <RichTextEditor
+                value={newsForm.content}
+                onChange={val => setNewsForm(prev => ({...prev, content: val}))}
+                placeholder={t('news.richPlaceholder')}
+              />
+            </div>
+            <div className="flex items-center gap-3 justify-end">
+              <button
+                className="rounded border px-4 py-2 text-xs font-medium hover:bg-slate-50"
+                onClick={() => {
+                  resetNewsForm()
+                  setEditingNewsId(null)
+                }}
+                disabled={savingNews}
+              >
+                {t('news.reset')}
+              </button>
+              <button
+                className="rounded bg-blue-600 px-4 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+                onClick={handleSaveNews}
+                disabled={savingNews}
+              >
+                {savingNews ? t('news.saving') : editingNewsId ? t('news.update') : t('news.add')}
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-2 text-sm">
+            {newsItems.map(item => (
+              <div key={item.id} className="rounded border px-3 py-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="font-medium">{item.title}</div>
+                    <div className="text-xs text-slate-500 line-clamp-2">{item.excerpt}</div>
+                    <div className="mt-1 text-[11px] text-slate-400">
+                      {item.tag ? `${item.tag} • ` : ''}{item.date ?? 'No date'}
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 text-xs">
+                    <button className="text-blue-600 hover:underline" onClick={() => handleEditNews(item)}>
+                      {t('news.edit')}
+                    </button>
+                    <button
+                      className="text-red-600 hover:underline"
+                      onClick={() => handleDeleteNews(item.id)}
+                      disabled={removingNews === item.id}
+                    >
+                      {removingNews === item.id ? t('news.deleting') : t('news.delete')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {newsItems.length === 0 && <p className="text-xs text-slate-500">{t('news.empty')}</p>}
+          </div>
         </div>
       </div>
 
