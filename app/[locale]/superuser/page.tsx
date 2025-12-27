@@ -19,12 +19,12 @@ export default function SuperuserDashboardPage() {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([])
   const [courses, setCourses] = useState<Course[]>([])
   const [courseTeachers, setCourseTeachers] = useState<CourseTeacher[]>([])
-  const [siteSettings, setSiteSettings] = useState<{heroBadge: string} | null>(null)
   const [selectedCourse, setSelectedCourse] = useState<string>('')
   const [selectedStudent, setSelectedStudent] = useState<string>('')
   const [selectedCourseForTeacher, setSelectedCourseForTeacher] = useState<string>('')
   const [selectedTeacherForCourse, setSelectedTeacherForCourse] = useState<string>('')
   const [studentQuery, setStudentQuery] = useState<string>('')
+  const [userQuery, setUserQuery] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [savingToggle, setSavingToggle] = useState<string | null>(null)
@@ -35,7 +35,10 @@ export default function SuperuserDashboardPage() {
   const [addingCourseTeacher, setAddingCourseTeacher] = useState(false)
   const [removingCourseTeacher, setRemovingCourseTeacher] = useState<string | null>(null)
   const [creatingUser, setCreatingUser] = useState(false)
-  const [savingSite, setSavingSite] = useState(false)
+  const [editingUserId, setEditingUserId] = useState<string | null>(null)
+  const [editName, setEditName] = useState('')
+  const [editEmail, setEditEmail] = useState('')
+  const [savingUser, setSavingUser] = useState(false)
   const [newsItems, setNewsItems] = useState<NewsItem[]>([])
   const [newsForm, setNewsForm] = useState<{
     title: string
@@ -78,23 +81,21 @@ export default function SuperuserDashboardPage() {
     setLoading(true)
     setError(null)
     try {
-      const [teachersRes, studentsRes, enrollRes, siteRes, courseTeachersRes, newsRes] = await Promise.all([
+      const [teachersRes, studentsRes, enrollRes, courseTeachersRes, newsRes] = await Promise.all([
         fetch('/api/superuser/teachers', {cache: 'no-store'}),
         fetch('/api/superuser/students', {cache: 'no-store'}),
         fetch('/api/superuser/enrollments', {cache: 'no-store'}),
-        fetch('/api/site', {cache: 'no-store'}),
         fetch('/api/superuser/course-teachers', {cache: 'no-store'}),
         fetch('/api/superuser/news', {cache: 'no-store'}),
       ])
       const coursesRes = await fetch('/api/courses', {cache: 'no-store'})
-      if (![teachersRes, studentsRes, enrollRes, coursesRes, siteRes, courseTeachersRes, newsRes].every(r => r.ok)) {
+      if (![teachersRes, studentsRes, enrollRes, coursesRes, courseTeachersRes, newsRes].every(r => r.ok)) {
         throw new Error('Failed to load data')
       }
       setTeachers(await teachersRes.json())
       setStudents(await studentsRes.json())
       setEnrollments(await enrollRes.json())
       setCourses(await coursesRes.json())
-      setSiteSettings(await siteRes.json())
       setCourseTeachers(await courseTeachersRes.json())
       setNewsItems(await newsRes.json())
     } catch (err) {
@@ -111,7 +112,7 @@ export default function SuperuserDashboardPage() {
     }
   }, [hydrated, session, t])
 
-  const filteredStudents = useMemo(
+  const filteredStudentsForEnroll = useMemo(
     () =>
       students.filter(
         s =>
@@ -120,6 +121,26 @@ export default function SuperuserDashboardPage() {
       ),
     [students, studentQuery]
   )
+
+  const filteredTeachers = useMemo(() => {
+    const query = userQuery.toLowerCase()
+    if (!query) return teachers
+    return teachers.filter(
+      tchr =>
+        (tchr.name || '').toLowerCase().includes(query) ||
+        (tchr.email || '').toLowerCase().includes(query)
+    )
+  }, [teachers, userQuery])
+
+  const filteredStudents = useMemo(() => {
+    const query = userQuery.toLowerCase()
+    if (!query) return students
+    return students.filter(
+      s =>
+        (s.name || '').toLowerCase().includes(query) ||
+        (s.email || '').toLowerCase().includes(query)
+    )
+  }, [students, userQuery])
 
   const courseTeacherLookup = useMemo(
     () =>
@@ -159,6 +180,46 @@ export default function SuperuserDashboardPage() {
       setError(t('deleteUserError'))
     } finally {
       setRemovingUser(null)
+    }
+  }
+
+  const startEditUser = (user: User) => {
+    setEditingUserId(user.id)
+    setEditName(user.name ?? '')
+    setEditEmail(user.email ?? '')
+    setError(null)
+  }
+
+  const cancelEditUser = () => {
+    setEditingUserId(null)
+    setEditName('')
+    setEditEmail('')
+  }
+
+  const handleSaveUser = async (id: string) => {
+    if (!editName.trim()) {
+      setError(t('nameRequired'))
+      return
+    }
+    if (!editEmail.trim()) {
+      setError(t('emailRequired'))
+      return
+    }
+    setSavingUser(true)
+    try {
+      const res = await fetch(`/api/superuser/users/${id}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name: editName.trim(), email: editEmail.trim()}),
+      })
+      if (!res.ok) throw new Error('failed')
+      await loadData()
+      cancelEditUser()
+    } catch (err) {
+      console.error(err)
+      setError(t('updateUserError'))
+    } finally {
+      setSavingUser(false)
     }
   }
 
@@ -278,29 +339,6 @@ export default function SuperuserDashboardPage() {
       setError(t('createUserError'))
     } finally {
       setCreatingUser(false)
-    }
-  }
-
-  const handleSaveSite = async () => {
-    if (!siteSettings?.heroBadge.trim()) {
-      setError(t('announcementRequired'))
-      return
-    }
-    setSavingSite(true)
-    setError(null)
-    try {
-      const res = await fetch('/api/site', {
-        method: 'PUT',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({heroBadge: siteSettings.heroBadge.trim()})
-      })
-      if (!res.ok) throw new Error('failed')
-      setSiteSettings(await res.json())
-    } catch (err) {
-      console.error(err)
-      setError(t('saveAnnouncementError'))
-    } finally {
-      setSavingSite(false)
     }
   }
 
@@ -486,18 +524,49 @@ export default function SuperuserDashboardPage() {
           </div>
         </div>
 
+        <div className="rounded-lg border bg-white p-4 shadow-sm space-y-3 md:col-span-2">
+          <h2 className="text-lg font-semibold">{t('userSearchTitle')}</h2>
+          <input
+            type="text"
+            className="w-full rounded border px-3 py-2 text-sm"
+            placeholder={t('userSearchPlaceholder')}
+            value={userQuery}
+            onChange={e => setUserQuery(e.target.value)}
+          />
+        </div>
+
         <div className="rounded-lg border bg-white p-4 shadow-sm space-y-3">
           <h2 className="text-lg font-semibold">{t('teachersTitle')}</h2>
           <p className="text-xs text-slate-500">{t('teachersHelp')}</p>
-          <div className="space-y-2 text-sm">
-            {teachers.map(tchr => (
+          <div className="space-y-2 text-sm max-h-96 overflow-y-auto pr-1">
+            {filteredTeachers.map(tchr => (
               <div
                 key={tchr.id}
                 className="flex items-center justify-between rounded border px-3 py-2"
               >
                 <div>
-                  <div className="font-medium">{tchr.name}</div>
-                  <div className="text-xs text-slate-500 capitalize">{tchr.role}</div>
+                  {editingUserId === tchr.id ? (
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        className="w-full rounded border px-2 py-1 text-xs"
+                        value={editName}
+                        onChange={e => setEditName(e.target.value)}
+                      />
+                      <input
+                        type="email"
+                        className="w-full rounded border px-2 py-1 text-xs"
+                        value={editEmail}
+                        onChange={e => setEditEmail(e.target.value)}
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="font-medium">{tchr.name}</div>
+                      <div className="text-xs text-slate-500">{tchr.email}</div>
+                      <div className="text-xs text-slate-500 capitalize">{tchr.role}</div>
+                    </>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 text-xs">
                   <label className="flex items-center gap-2">
@@ -510,43 +579,120 @@ export default function SuperuserDashboardPage() {
                     {t('canManageStudents')}
                   </label>
                   {tchr.role !== 'superuser' && (
-                    <button
-                      className="text-red-600 hover:underline"
-                      onClick={() => handleDeleteUser(tchr.id)}
-                      disabled={removingUser === tchr.id}
-                    >
-                      {removingUser === tchr.id ? t('deleting') : t('delete')}
-                    </button>
+                    <>
+                      {editingUserId === tchr.id ? (
+                        <>
+                          <button
+                            className="text-blue-600 hover:underline"
+                            onClick={() => handleSaveUser(tchr.id)}
+                            disabled={savingUser}
+                          >
+                            {savingUser ? t('saving') : t('save')}
+                          </button>
+                          <button
+                            className="text-slate-600 hover:underline"
+                            onClick={cancelEditUser}
+                            disabled={savingUser}
+                          >
+                            {t('cancel')}
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          className="text-blue-600 hover:underline"
+                          onClick={() => startEditUser(tchr)}
+                        >
+                          {t('edit')}
+                        </button>
+                      )}
+                      <button
+                        className="text-red-600 hover:underline"
+                        onClick={() => handleDeleteUser(tchr.id)}
+                        disabled={removingUser === tchr.id}
+                      >
+                        {removingUser === tchr.id ? t('deleting') : t('delete')}
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
             ))}
-            {teachers.length === 0 && <p className="text-xs text-slate-500">{t('noTeachers')}</p>}
+            {filteredTeachers.length === 0 && (
+              <p className="text-xs text-slate-500">{t('noTeachers')}</p>
+            )}
           </div>
         </div>
 
         <div className="rounded-lg border bg-white p-4 shadow-sm space-y-3">
           <h2 className="text-lg font-semibold">{t('studentsTitle')}</h2>
-          <div className="space-y-2 text-sm">
-            {students.map(s => (
+          <div className="space-y-2 text-sm max-h-96 overflow-y-auto pr-1">
+            {filteredStudents.map(s => (
               <div
                 key={s.id}
                 className="flex items-center justify-between rounded border px-3 py-2"
               >
                 <div>
-                  <div className="font-medium">{s.name}</div>
-                  <div className="text-xs text-slate-500">{s.email}</div>
+                  {editingUserId === s.id ? (
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        className="w-full rounded border px-2 py-1 text-xs"
+                        value={editName}
+                        onChange={e => setEditName(e.target.value)}
+                      />
+                      <input
+                        type="email"
+                        className="w-full rounded border px-2 py-1 text-xs"
+                        value={editEmail}
+                        onChange={e => setEditEmail(e.target.value)}
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="font-medium">{s.name}</div>
+                      <div className="text-xs text-slate-500">{s.email}</div>
+                    </>
+                  )}
                 </div>
-                <button
-                  className="text-red-600 text-xs hover:underline"
-                  onClick={() => handleDeleteUser(s.id)}
-                  disabled={removingUser === s.id}
-                >
-                  {removingUser === s.id ? t('deleting') : t('delete')}
-                </button>
+                <div className="flex items-center gap-3 text-xs">
+                  {editingUserId === s.id ? (
+                    <>
+                      <button
+                        className="text-blue-600 hover:underline"
+                        onClick={() => handleSaveUser(s.id)}
+                        disabled={savingUser}
+                      >
+                        {savingUser ? t('saving') : t('save')}
+                      </button>
+                      <button
+                        className="text-slate-600 hover:underline"
+                        onClick={cancelEditUser}
+                        disabled={savingUser}
+                      >
+                        {t('cancel')}
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      className="text-blue-600 hover:underline"
+                      onClick={() => startEditUser(s)}
+                    >
+                      {t('edit')}
+                    </button>
+                  )}
+                  <button
+                    className="text-red-600 hover:underline"
+                    onClick={() => handleDeleteUser(s.id)}
+                    disabled={removingUser === s.id}
+                  >
+                    {removingUser === s.id ? t('deleting') : t('delete')}
+                  </button>
+                </div>
               </div>
             ))}
-            {students.length === 0 && <p className="text-xs text-slate-500">{t('noStudents')}</p>}
+            {filteredStudents.length === 0 && (
+              <p className="text-xs text-slate-500">{t('noStudents')}</p>
+            )}
           </div>
         </div>
       </div>
@@ -568,7 +714,7 @@ export default function SuperuserDashboardPage() {
               onChange={e => setSelectedStudent(e.target.value)}
             >
               <option value="">{t('selectStudent')}</option>
-              {filteredStudents.map(s => (
+              {filteredStudentsForEnroll.map(s => (
                 <option key={s.id} value={s.id}>
                   {s.name}
                 </option>
@@ -694,27 +840,6 @@ export default function SuperuserDashboardPage() {
           {courseTeachers.length === 0 && (
             <p className="text-xs text-slate-500">{t('noCourseTeachers')}</p>
           )}
-        </div>
-      </div>
-
-      <div className="rounded-lg border bg-white p-4 shadow-sm space-y-3">
-        <h2 className="text-lg font-semibold">{t('announcementTitle')}</h2>
-        <p className="text-xs text-slate-500">{t('announcementHelp')}</p>
-        <input
-          type="text"
-          className="w-full rounded border px-3 py-2 text-sm"
-          value={siteSettings?.heroBadge ?? ''}
-          onChange={e => setSiteSettings(prev => ({heroBadge: e.target.value}))}
-          placeholder={t('announcementPlaceholder')}
-        />
-        <div className="flex justify-end">
-          <button
-            className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
-            onClick={handleSaveSite}
-            disabled={savingSite || !siteSettings?.heroBadge.trim()}
-          >
-            {savingSite ? t('saving') : t('saveAnnouncement')}
-          </button>
         </div>
       </div>
 

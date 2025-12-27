@@ -3,6 +3,7 @@
 import {useMemo} from 'react';
 
 import {useLocale, useTranslations} from 'next-intl';
+import {useSearchParams} from 'next/navigation';
 import {usePathname, useRouter} from '@/navigation';
 
 import {locales} from '@/i18n';
@@ -15,6 +16,7 @@ export default function LanguageSwitcher({className}: LanguageSwitcherProps) {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const t = useTranslations('nav');
 
   const options = useMemo(
@@ -28,7 +30,9 @@ export default function LanguageSwitcher({className}: LanguageSwitcherProps) {
 
   const handleSelect = (nextLocale: string) => {
     if (nextLocale === locale) return;
-    router.replace(pathname, {locale: nextLocale});
+    const query = searchParams.toString();
+    const nextPath = query ? `${pathname}?${query}` : pathname;
+    router.replace(nextPath, {locale: nextLocale});
   };
 
   return (

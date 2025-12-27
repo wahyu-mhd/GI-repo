@@ -2,7 +2,6 @@ import { getTranslations, setRequestLocale } from "next-intl/server"
 import Image from "next/image"
 import { Link } from "@/navigation"
 import { BookOpen, Trophy, TrendingUp, GraduationCap, School, User, ArrowRight, CheckCircle2 } from "lucide-react"
-import { readSiteSettings } from "@/lib/siteFileStore"
 import { readNews, type NewsItem } from "@/lib/newsFileStore"
 
 // Shadcn Imports
@@ -23,7 +22,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   // Bind translations explicitly to the current locale to avoid falling back to default
   const t = await getTranslations({ locale, namespace: 'home' })
   const newsT = await getTranslations({ locale, namespace: 'news' })
-  const site = await readSiteSettings()
   const newsItems = (await readNews()).slice(0, 3)
 
   const features = [
@@ -48,7 +46,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <div className="grid gap-12 md:grid-cols-2 items-center">
           <div className="space-y-8">
             <Badge variant="secondary" className="px-4 py-1 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full">
-              {site?.heroBadge?.trim() ? site.heroBadge : t('heroBadge')}
+              {t('heroBadge')}
             </Badge>
 
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900">

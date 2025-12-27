@@ -41,6 +41,7 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
 
         <nav className="space-y-1">
           <TeacherNavLink href="/teacher/courses" label="My Courses" />
+          <TeacherNavLink href="/teacher/settings" label="Settings" />
 
           {/* Future features (just placeholders for now) */}
           {/* <TeacherNavLink href="/teacher/materials" label="Materials" /> */}

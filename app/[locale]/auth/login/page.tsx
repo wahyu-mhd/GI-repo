@@ -16,6 +16,9 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetStatus, setResetStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [resetMessage, setResetMessage] = useState('')
 
   return (
     <div className="max-w-md mx-auto mt-16 p-6 rounded-lg border bg-white shadow-sm">
@@ -94,6 +97,61 @@ export default function LoginPage() {
         >
           {t('cta')}
         </button>
+      </div>
+
+      <div className="mt-6 border-t pt-4">
+        <h2 className="text-sm font-semibold text-slate-700">{t('forgotTitle')}</h2>
+        <p className="text-xs text-slate-500 mt-1">{t('forgotHelp')}</p>
+        <div className="mt-3 space-y-2">
+          <input
+            type="email"
+            placeholder={t('forgotEmailPlaceholder')}
+            className="w-full rounded border px-3 py-2 text-sm"
+            value={resetEmail}
+            onChange={e => setResetEmail(e.target.value)}
+          />
+          <button
+            type="button"
+            onClick={async () => {
+              if (!resetEmail.trim()) {
+                setResetStatus('error')
+                setResetMessage(t('forgotError'))
+                return
+              }
+              setResetStatus('sending')
+              setResetMessage('')
+              try {
+                const res = await fetch('/api/auth/request-reset', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email: resetEmail.trim() }),
+                })
+                if (!res.ok) {
+                  throw new Error('reset failed')
+                }
+                setResetStatus('sent')
+                setResetMessage(t('forgotSuccess'))
+              } catch {
+                setResetStatus('error')
+                setResetMessage(t('forgotError'))
+              }
+            }}
+            className="w-full bg-slate-900 text-white py-2 rounded hover:bg-slate-800 text-sm disabled:opacity-60"
+            disabled={resetStatus === 'sending'}
+          >
+            {resetStatus === 'sending' ? t('forgotSending') : t('forgotCta')}
+          </button>
+          {resetMessage && (
+            <p
+              className={[
+                'text-xs',
+                resetStatus === 'sent' ? 'text-emerald-600' : 'text-rose-600',
+              ].join(' ')}
+            >
+              {resetMessage}
+            </p>
+          )}
+        </div>
       </div>
 
       <p className="text-xs text-slate-500 mt-4">{t('disclaimer')}</p>
