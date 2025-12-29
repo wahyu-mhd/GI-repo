@@ -437,7 +437,10 @@
     "viewAll": "Lihat semua",
     "empty": "Belum ada pembaruan. Coba lagi nanti.",
     "back": "Kembali ke semua pembaruan",
-    "noContent": "Belum ada artikel lengkap. Coba lagi nanti."
+    "noContent": "Belum ada artikel lengkap. Coba lagi nanti.",
+    "sortLabel": "Urutkan",
+    "sortNewest": "Terbaru dulu",
+    "sortOldest": "Terlama dulu"
   },
   "superuser": {
     "title": "Dasbor Superuser",
@@ -499,6 +502,7 @@
     "saving": "Menyimpan...",
     "coursesTitle": "Kursus & pelajaran",
     "coursesHelp": "Superuser bisa melihat/mengelola pelajaran seperti guru.",
+    "coursesSearchPlaceholder": "Cari kursus...",
     "primaryTeacher": "Guru utama: {name}",
     "noAdditionalTeachers": "Belum ada guru tambahan",
     "manageLessons": "Kelola pelajaran",

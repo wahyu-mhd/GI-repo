@@ -154,4 +154,18 @@ body {
   .dark [class*="border-neutral"] {
     border-color: var(--border) !important;
   }
+  .dark select {
+    background-color: var(--card);
+    color: var(--foreground);
+    color-scheme: light;
+  }
+  .dark select option {
+    background-color: #f8fafc;
+    color: #0f172a;
+  }
+  .dark select option:checked,
+  .dark select option:hover {
+    background-color: #e2e8f0;
+    color: #0f172a;
+  }
 }

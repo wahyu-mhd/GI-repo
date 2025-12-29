@@ -1,5 +1,15 @@
 [
   {
+    "id": "news-1766570837750-3",
+    "createdAt": "2025-12-24T10:07:17.750Z",
+    "title": "tahu",
+    "excerpt": "all about test",
+    "image": "/globe.svg",
+    "tag": "vb",
+    "date": "2025-12-25",
+    "content": "{\"root\":{\"children\":[{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"gh\",\"type\":\"text\",\"version\":1}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"paragraph\",\"version\":1,\"textFormat\":0,\"textStyle\":\"\"}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"root\",\"version\":1}}"
+  },
+  {
     "id": "news-1",
     "title": "Curriculum refresh with new interactive practice sets",
     "excerpt": "We added adaptive drills across math and science to keep learners engaged at every level.",
@@ -9,6 +19,16 @@
     "date": "Dec 12, 2025",
     "content": "",
     "createdAt": "2025-12-12T00:00:00.000Z"
+  },
+  {
+    "id": "news-1766910115197-4",
+    "createdAt": "2025-12-28T08:21:55.197Z",
+    "title": "gu",
+    "excerpt": "gh",
+    "image": "/globe.svg",
+    "tag": "g",
+    "date": "2025-12-11",
+    "content": "{\"root\":{\"children\":[{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"vhbhnj\",\"type\":\"text\",\"version\":1}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"paragraph\",\"version\":1,\"textFormat\":0,\"textStyle\":\"\"}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"root\",\"version\":1}}"
   },
   {
     "id": "news-2",
@@ -22,6 +42,17 @@
     "createdAt": "2025-12-08T00:00:00.000Z"
   },
   {
+    "id": "news-1766997570261-5",
+    "createdAt": "2025-12-29T08:39:30.261Z",
+    "title": "dfqwf",
+    "excerpt": "ghjk",
+    "image": "/globe.svg",
+    "href": "gbn",
+    "tag": "vbnm",
+    "date": "2025-12-06",
+    "content": ""
+  },
+  {
     "id": "news-3",
     "title": "Teacher-led study groups launch for exam readiness",
     "excerpt": "Join live sessions hosted by top instructors and collaborate with classmates in real time.",
@@ -32,13 +63,14 @@
     "createdAt": "2025-12-02T00:00:00.000Z"
   },
   {
-    "id": "news-1766570837750-3",
-    "createdAt": "2025-12-24T10:07:17.750Z",
-    "title": "tahu",
-    "excerpt": "all about test",
+    "id": "news-1766997580525-6",
+    "createdAt": "2025-12-29T08:39:40.525Z",
+    "title": "vbnm",
+    "excerpt": "e",
     "image": "/globe.svg",
-    "tag": "vb",
-    "date": "2025-12-25",
-    "content": "{\"root\":{\"children\":[{\"children\":[{\"detail\":0,\"format\":0,\"mode\":\"normal\",\"style\":\"\",\"text\":\"gh\",\"type\":\"text\",\"version\":1}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"paragraph\",\"version\":1,\"textFormat\":0,\"textStyle\":\"\"}],\"direction\":null,\"format\":\"\",\"indent\":0,\"type\":\"root\",\"version\":1}}"
+    "href": "wr",
+    "tag": "bn",
+    "date": "2025-12-13",
+    "content": ""
   }
 ]

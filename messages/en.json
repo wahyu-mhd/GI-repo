@@ -437,7 +437,10 @@
     "viewAll": "View all",
     "empty": "No updates yet. Check back soon.",
     "back": "Back to all updates",
-    "noContent": "No full article yet. Check back soon."
+    "noContent": "No full article yet. Check back soon.",
+    "sortLabel": "Sort by",
+    "sortNewest": "Newest first",
+    "sortOldest": "Oldest first"
   },
   "superuser": {
     "title": "Superuser Dashboard",
@@ -499,6 +502,7 @@
     "saving": "Saving...",
     "coursesTitle": "Courses & lessons",
     "coursesHelp": "Superuser can view/manage lessons like teachers.",
+    "coursesSearchPlaceholder": "Search courses...",
     "primaryTeacher": "Primary teacher: {name}",
     "noAdditionalTeachers": "No additional teachers",
     "manageLessons": "Manage lessons",

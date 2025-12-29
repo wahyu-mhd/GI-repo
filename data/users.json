@@ -55,5 +55,40 @@
     "role": "teacher",
     "canManageStudents": false,
     "tempPassword": "teacher_295924"
+  },
+  {
+    "id": "user-1766998259795-8",
+    "name": "dfghj",
+    "email": "ghj",
+    "role": "student",
+    "tempPassword": "student_758801"
+  },
+  {
+    "id": "user-1766998266547-9",
+    "name": "fghj",
+    "email": "fghj",
+    "role": "student",
+    "tempPassword": "student_764846"
+  },
+  {
+    "id": "user-1766998272928-10",
+    "name": "fghjk",
+    "email": "dfgnm",
+    "role": "student",
+    "tempPassword": "student_725716"
+  },
+  {
+    "id": "user-1766998278678-11",
+    "name": "ertyui",
+    "email": "rghj",
+    "role": "student",
+    "tempPassword": "student_574322"
+  },
+  {
+    "id": "user-1766998283790-12",
+    "name": "dfghj",
+    "email": "fghj",
+    "role": "student",
+    "tempPassword": "student_425930"
   }
 ]

@@ -18,6 +18,7 @@ export default function SuperuserDashboardPage() {
   const [students, setStudents] = useState<User[]>([])
   const [enrollments, setEnrollments] = useState<Enrollment[]>([])
   const [courses, setCourses] = useState<Course[]>([])
+  const [courseQuery, setCourseQuery] = useState<string>('')
   const [courseTeachers, setCourseTeachers] = useState<CourseTeacher[]>([])
   const [selectedCourse, setSelectedCourse] = useState<string>('')
   const [selectedStudent, setSelectedStudent] = useState<string>('')
@@ -141,6 +142,17 @@ export default function SuperuserDashboardPage() {
         (s.email || '').toLowerCase().includes(query)
     )
   }, [students, userQuery])
+
+  const filteredCourses = useMemo(() => {
+    const query = courseQuery.trim().toLowerCase()
+    if (!query) return courses
+    return courses.filter(c =>
+      (c.title || '').toLowerCase().includes(query) ||
+      (c.description || '').toLowerCase().includes(query) ||
+      (c.teacherName || '').toLowerCase().includes(query)
+    )
+  }, [courses, courseQuery])
+
 
   const courseTeacherLookup = useMemo(
     () =>
@@ -938,7 +950,7 @@ export default function SuperuserDashboardPage() {
             </div>
           </div>
 
-          <div className="space-y-2 text-sm">
+          <div className="space-y-2 text-sm max-h-96 overflow-y-auto pr-1">
             {newsItems.map(item => (
               <div key={item.id} className="rounded border px-3 py-2">
                 <div className="flex items-start justify-between gap-2">
@@ -972,8 +984,15 @@ export default function SuperuserDashboardPage() {
       <div className="rounded-lg border bg-white p-4 shadow-sm space-y-3">
         <h2 className="text-lg font-semibold">{t('coursesTitle')}</h2>
         <p className="text-xs text-slate-500">{t('coursesHelp')}</p>
-        <div className="space-y-2 text-sm">
-          {courses.map(c => {
+        <input
+          type="text"
+          className="w-full rounded border px-3 py-2 text-sm"
+          placeholder={t('coursesSearchPlaceholder')}
+          value={courseQuery}
+          onChange={e => setCourseQuery(e.target.value)}
+        />
+        <div className="space-y-2 text-sm max-h-96 overflow-y-auto pr-1">
+          {filteredCourses.map(c => {
             const assigned = courseTeacherLookup[c.id] ?? []
             return (
               <div key={c.id} className="flex items-center justify-between rounded border px-3 py-2">
@@ -1016,7 +1035,7 @@ export default function SuperuserDashboardPage() {
               </div>
             )
           })}
-          {courses.length === 0 && <p className="text-xs text-slate-500">{t('noCourses')}</p>}
+          {filteredCourses.length === 0 && <p className="text-xs text-slate-500">{t('noCourses')}</p>}
         </div>
       </div>
     </section>
