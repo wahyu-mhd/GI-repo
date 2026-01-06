@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { Input } from '@/components/ui/input'
 
 type User = { id: string; name: string }
 type Enrollment = { id: string; courseId: string; studentId: string }
@@ -30,6 +31,7 @@ export function TeacherFeedbackPanel({ courseId, teacherName }: Props) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
     const load = async () => {
@@ -62,6 +64,26 @@ export function TeacherFeedbackPanel({ courseId, teacherName }: Props) {
     const ids = new Set(enrollments.filter(e => e.courseId === courseId).map(e => e.studentId))
     return students.filter(s => ids.has(s.id))
   }, [courseId, enrollments, students])
+  const studentById = useMemo(() => {
+    return new Map(students.map(student => [student.id, student]))
+  }, [students])
+  const filteredFeedback = useMemo(() => {
+    const normalized = searchTerm.trim().toLowerCase()
+    if (!normalized) return feedback
+    return feedback.filter(item => {
+      const studentName = studentById.get(item.studentId)?.name ?? ''
+      const haystack = [
+        studentName,
+        item.studentId,
+        item.message,
+        item.teacherName,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      return haystack.includes(normalized)
+    })
+  }, [feedback, searchTerm, studentById])
 
   const handleSubmit = async () => {
     if (!selectedStudentId || !message.trim()) return
@@ -135,21 +157,38 @@ export function TeacherFeedbackPanel({ courseId, teacherName }: Props) {
         {feedback.length === 0 && (
           <p className="text-xs text-slate-500">{t('empty')}</p>
         )}
-        <div className="space-y-2">
-          {feedback.slice(0, 5).map(item => {
-            const student = students.find(s => s.id === item.studentId)
-            return (
-              <div key={item.id} className="rounded border p-3 text-sm bg-slate-50">
-                <div className="flex justify-between text-xs text-slate-500">
-                  <span>{student?.name ?? item.studentId}</span>
-                  <span>{new Date(item.createdAt).toLocaleString()}</span>
-                </div>
-                <p className="mt-1 text-slate-800">{item.message}</p>
-                <p className="text-xs text-slate-500 mt-1">{t('from', { name: item.teacherName })}</p>
-              </div>
-            )
-          })}
-        </div>
+        {feedback.length > 0 && (
+          <>
+            <div className="max-w-md">
+              <Input
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                placeholder={t('searchPlaceholder')}
+                aria-label={t('searchPlaceholder')}
+              />
+            </div>
+
+            {filteredFeedback.length === 0 && (
+              <p className="text-xs text-slate-500">{t('noResults')}</p>
+            )}
+
+            <div className="max-h-[360px] space-y-2 overflow-y-auto pr-1">
+              {filteredFeedback.map(item => {
+                const student = studentById.get(item.studentId)
+                return (
+                  <div key={item.id} className="rounded border p-3 text-sm bg-slate-50">
+                    <div className="flex justify-between text-xs text-slate-500">
+                      <span>{student?.name ?? item.studentId}</span>
+                      <span>{new Date(item.createdAt).toLocaleString()}</span>
+                    </div>
+                    <p className="mt-1 text-slate-800">{item.message}</p>
+                    <p className="text-xs text-slate-500 mt-1">{t('from', { name: item.teacherName })}</p>
+                  </div>
+                )
+              })}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

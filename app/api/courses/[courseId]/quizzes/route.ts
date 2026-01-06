@@ -39,6 +39,8 @@ export async function POST(
       timeLimitMinutes?: number
       availableFrom?: string
       availableUntil?: string
+      showScoreToStudent?: boolean
+      showCorrectAnswersToStudent?: boolean
     }
     if (!body.title || !body.questions?.length) {
       return NextResponse.json({ error: 'Missing title or questions' }, { status: 400 })
@@ -100,6 +102,8 @@ export async function POST(
       timeLimitMinutes: body.timeLimitMinutes,
       availableFrom: normalizedAvailableFrom,
       availableUntil: normalizedAvailableUntil,
+      showScoreToStudent: body.showScoreToStudent ?? true,
+      showCorrectAnswersToStudent: body.showCorrectAnswersToStudent ?? true,
     })
 
     await Promise.all(

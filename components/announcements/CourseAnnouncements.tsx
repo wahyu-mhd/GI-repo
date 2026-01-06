@@ -3,6 +3,7 @@
 import {useEffect, useMemo, useState} from 'react'
 import {useLocale, useTranslations} from 'next-intl'
 import {Button} from '@/components/ui/button'
+import {Input} from '@/components/ui/input'
 import {Textarea} from '@/components/ui/textarea'
 
 type Announcement = {
@@ -52,6 +53,7 @@ export function CourseAnnouncements({courseId, viewerName, canCreate}: Props) {
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({})
   const [postingAnnouncement, setPostingAnnouncement] = useState(false)
   const [postingComment, setPostingComment] = useState<Record<string, boolean>>({})
+  const [searchTerm, setSearchTerm] = useState('')
 
   const sortedThreads = useMemo(
     () =>
@@ -60,6 +62,24 @@ export function CourseAnnouncements({courseId, viewerName, canCreate}: Props) {
       ),
     [threads]
   )
+  const filteredThreads = useMemo(() => {
+    const normalized = searchTerm.trim().toLowerCase()
+    if (!normalized) return sortedThreads
+    return sortedThreads.filter(thread => {
+      const commentText = thread.comments
+        .map(comment => `${comment.authorName} ${comment.message}`)
+        .join(' ')
+      const haystack = [
+        thread.authorName,
+        thread.message,
+        commentText,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      return haystack.includes(normalized)
+    })
+  }, [searchTerm, sortedThreads])
 
   const loadAnnouncements = async () => {
     try {
@@ -167,6 +187,15 @@ export function CourseAnnouncements({courseId, viewerName, canCreate}: Props) {
         </div>
       )}
 
+      <div className="max-w-md">
+        <Input
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          placeholder={t('searchPlaceholder')}
+          aria-label={t('searchPlaceholder')}
+        />
+      </div>
+
       {error && <p className="text-sm text-red-600">{error}</p>}
       {loading && !error && <p className="text-sm text-slate-500">{t('loading')}</p>}
 
@@ -176,8 +205,12 @@ export function CourseAnnouncements({courseId, viewerName, canCreate}: Props) {
         </p>
       )}
 
-      <div className="space-y-3">
-        {sortedThreads.map(thread => (
+      {!loading && !error && sortedThreads.length > 0 && filteredThreads.length === 0 && (
+        <p className="text-sm text-slate-500">{t('noResults')}</p>
+      )}
+
+      <div className="max-h-[60vh] space-y-3 overflow-y-auto pr-1">
+        {filteredThreads.map(thread => (
           <div
             key={thread.id}
             className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm"

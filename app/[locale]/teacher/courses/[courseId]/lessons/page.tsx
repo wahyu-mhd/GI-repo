@@ -21,6 +21,7 @@ export default function TeacherLessonsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
     if (!courseId) return
@@ -54,13 +55,35 @@ export default function TeacherLessonsPage() {
     load()
   }, [courseId])
 
+  const moduleById = useMemo(() => {
+    return new Map(modules.map(module => [module.id, module]))
+  }, [modules])
+
+  const normalizedQuery = searchTerm.trim().toLowerCase()
+  const filteredLessons = useMemo(() => {
+    if (!normalizedQuery) return lessons
+    return lessons.filter(lesson => {
+      const moduleTitle = moduleById.get(lesson.moduleId)?.title ?? ''
+      const searchableText = [lesson.title, moduleTitle]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      return searchableText.includes(normalizedQuery)
+    })
+  }, [lessons, moduleById, normalizedQuery])
+
   const lessonsByModule = useMemo(() => {
     const grouped: { module: Module; lessons: Lesson[] }[] = []
-    modules.forEach(m => {
-      grouped.push({ module: m, lessons: lessons.filter(l => l.moduleId === m.id) })
+    const modulesToShow = normalizedQuery
+      ? modules.filter(m => filteredLessons.some(l => l.moduleId === m.id))
+      : modules
+    modulesToShow.forEach(m => {
+      grouped.push({ module: m, lessons: filteredLessons.filter(l => l.moduleId === m.id) })
     })
     return grouped
-  }, [modules, lessons])
+  }, [filteredLessons, modules, normalizedQuery])
+
+  const showSearch = modules.length > 0
 
   const handleDelete = async (id: string, moduleId: string) => {
     setDeletingId(id)
@@ -111,7 +134,27 @@ export default function TeacherLessonsPage() {
         <p className="text-sm text-slate-500">{t('noModules')}</p>
       )}
 
-      <div className="space-y-6">
+      {showSearch && (
+        <div className="rounded-lg border bg-white p-3">
+          <label htmlFor="lesson-search" className="sr-only">
+            {t('searchPlaceholder')}
+          </label>
+          <input
+            id="lesson-search"
+            type="search"
+            value={searchTerm}
+            onChange={event => setSearchTerm(event.target.value)}
+            placeholder={t('searchPlaceholder')}
+            className="w-full rounded border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+      )}
+
+      {showSearch && normalizedQuery && filteredLessons.length === 0 && (
+        <p className="text-sm text-slate-500">{t('noResults')}</p>
+      )}
+
+      <div className="max-h-[60vh] space-y-6 overflow-y-auto pr-1">
         {lessonsByModule.map(({ module, lessons }) => (
           <div key={module.id} className="space-y-3">
             <h2 className="text-lg font-semibold">{t('moduleTitle', { title: module.title })}</h2>

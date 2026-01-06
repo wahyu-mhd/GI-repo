@@ -48,6 +48,8 @@ export async function PUT(
     timeLimitMinutes: number | null
     availableFrom: string | null
     availableUntil: string | null
+    showScoreToStudent: boolean
+    showCorrectAnswersToStudent: boolean
   }>
 
   const hasTitle = body.title !== undefined
@@ -57,6 +59,8 @@ export async function PUT(
   const hasTimeLimit = body.timeLimitMinutes !== undefined
   const hasAvailableFrom = body.availableFrom !== undefined
   const hasAvailableUntil = body.availableUntil !== undefined
+  const hasShowScoreToStudent = body.showScoreToStudent !== undefined
+  const hasShowCorrectAnswersToStudent = body.showCorrectAnswersToStudent !== undefined
 
   if (
     !hasTitle &&
@@ -65,7 +69,9 @@ export async function PUT(
     !hasMaxAttempts &&
     !hasTimeLimit &&
     !hasAvailableFrom &&
-    !hasAvailableUntil
+    !hasAvailableUntil &&
+    !hasShowScoreToStudent &&
+    !hasShowCorrectAnswersToStudent
   ) {
     return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
   }
@@ -205,6 +211,12 @@ export async function PUT(
     timeLimitMinutes: hasTimeLimit ? nextTimeLimit ?? undefined : existing.timeLimitMinutes,
     availableFrom: hasAvailableFrom ? nextAvailableFrom : existing.availableFrom,
     availableUntil: hasAvailableUntil ? nextAvailableUntil : existing.availableUntil,
+    showScoreToStudent: hasShowScoreToStudent
+      ? body.showScoreToStudent
+      : existing.showScoreToStudent,
+    showCorrectAnswersToStudent: hasShowCorrectAnswersToStudent
+      ? body.showCorrectAnswersToStudent
+      : existing.showCorrectAnswersToStudent,
   })
 
   if (!updatedQuiz) return NextResponse.json({ error: 'Update failed' }, { status: 500 })

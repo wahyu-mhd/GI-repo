@@ -44,6 +44,10 @@ function extractPlainText(input: string): string {
   }
 }
 
+function normalizeSearchText(input?: string | null): string {
+  return extractPlainText(input ?? '').toLowerCase()
+}
+
 export default function EditQuizPage({ params }: Props) {
   const { courseId, quizId } = use(params)
   const t = useTranslations('quiz')
@@ -57,13 +61,31 @@ export default function EditQuizPage({ params }: Props) {
   const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | ''>('')
   const [availableFrom, setAvailableFrom] = useState<string>('')
   const [availableUntil, setAvailableUntil] = useState<string>('')
+  const [showScoreToStudent, setShowScoreToStudent] = useState(true)
+  const [showCorrectAnswersToStudent, setShowCorrectAnswersToStudent] = useState(true)
   const [questions, setQuestions] = useState<EditableQuestion[]>([])
+  const [questionQuery, setQuestionQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [useUniformPoints, setUseUniformPoints] = useState(false)
   const [uniformPoints, setUniformPoints] = useState({ correct: 1, wrong: 0, skip: 0 })
+  const normalizedQuestionQuery = questionQuery.trim().toLowerCase()
+  const filteredQuestions = normalizedQuestionQuery
+    ? questions
+        .map((q, idx) => ({ q, idx }))
+        .filter(({ q, idx }) => {
+          const haystack = [
+            normalizeSearchText(q.text),
+            normalizeSearchText(q.explanation),
+            normalizeSearchText(q.expectedAnswer),
+            q.choices.map(choice => normalizeSearchText(choice)).join(' '),
+            t('questionLabel', { index: idx + 1 }).toLowerCase(),
+          ].join(' ')
+          return haystack.includes(normalizedQuestionQuery)
+        })
+    : questions.map((q, idx) => ({ q, idx }))
 
   useEffect(() => {
     const load = async () => {
@@ -102,6 +124,8 @@ export default function EditQuizPage({ params }: Props) {
             ? loadedQuiz.timeLimitMinutes
             : ''
         )
+        setShowScoreToStudent(loadedQuiz.showScoreToStudent !== false)
+        setShowCorrectAnswersToStudent(loadedQuiz.showCorrectAnswersToStudent !== false)
         const normalizedQuestions = loadedQuestions.map(q => ({
             id: q.id,
             type: q.type,
@@ -247,6 +271,8 @@ export default function EditQuizPage({ params }: Props) {
             : undefined,
         availableFrom: normalizedAvailableFrom,
         availableUntil: normalizedAvailableUntil,
+        showScoreToStudent,
+        showCorrectAnswersToStudent,
         questions: questions.map(q => {
           const base = {
             id: q.id,
@@ -367,6 +393,28 @@ export default function EditQuizPage({ params }: Props) {
             <p className="text-xs text-slate-500">{t('closesHelp')}</p>
           </div>
         </div>
+        <div className="space-y-1">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={showScoreToStudent}
+              onChange={e => setShowScoreToStudent(e.target.checked)}
+            />
+            {t('showScoreToStudents')}
+          </label>
+          <p className="text-xs text-slate-500">{t('showScoreToStudentsHelp')}</p>
+        </div>
+        <div className="space-y-1">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={showCorrectAnswersToStudent}
+              onChange={e => setShowCorrectAnswersToStudent(e.target.checked)}
+            />
+            {t('showCorrectAnswersToStudents')}
+          </label>
+          <p className="text-xs text-slate-500">{t('showCorrectAnswersToStudentsHelp')}</p>
+        </div>
         <div className="rounded border p-3 space-y-2 bg-slate-50">
           <div className="flex items-center justify-between text-sm">
             <div>
@@ -420,21 +468,35 @@ export default function EditQuizPage({ params }: Props) {
           <Button type="button" variant="outline" onClick={addQuestion}>+ {t('addQuestion')}</Button>
         </div>
 
-        {questions.map((q, idx) => (
-          <div key={q.id ?? idx} className="space-y-3 rounded-lg border bg-white p-4 shadow-sm">
-            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-              <div className="text-sm font-medium">{t('questionLabel', { index: idx + 1 })}</div>
-              <select
-                value={q.type}
-                onChange={e => updateQuestion(idx, { type: e.target.value as EditableQuestion['type'] })}
-                className="rounded border px-2 py-1 text-sm"
-              >
-                <option value="single">{t('multipleChoice')}</option>
-                <option value="multiple">{t('multipleSelect')}</option>
-                <option value="short">{t('shortAnswer')}</option>
-                <option value="long">{t('longAnswer')}</option>
-              </select>
-            </div>
+        <div className="flex items-center gap-2">
+          <Input
+            value={questionQuery}
+            onChange={e => setQuestionQuery(e.target.value)}
+            placeholder={t('searchQuestionsPlaceholder')}
+          />
+          {questionQuery && (
+            <Button type="button" variant="ghost" onClick={() => setQuestionQuery('')}>
+              {t('clearSearch')}
+            </Button>
+          )}
+        </div>
+
+        <div className="max-h-[60vh] space-y-3 overflow-y-auto pr-1">
+          {filteredQuestions.map(({ q, idx }) => (
+            <div key={q.id ?? idx} className="space-y-3 rounded-lg border bg-white p-4 shadow-sm">
+              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div className="text-sm font-medium">{t('questionLabel', { index: idx + 1 })}</div>
+                <select
+                  value={q.type}
+                  onChange={e => updateQuestion(idx, { type: e.target.value as EditableQuestion['type'] })}
+                  className="rounded border px-2 py-1 text-sm"
+                >
+                  <option value="single">{t('multipleChoice')}</option>
+                  <option value="multiple">{t('multipleSelect')}</option>
+                  <option value="short">{t('shortAnswer')}</option>
+                  <option value="long">{t('longAnswer')}</option>
+                </select>
+              </div>
 
             <div className="space-y-1">
               <label className="text-xs text-slate-600">{t('prompt')}</label>
@@ -531,17 +593,21 @@ export default function EditQuizPage({ params }: Props) {
               </div>
             </div>
 
-            <div className="flex justify-end">
-              <Button type="button" variant="ghost" onClick={() => removeQuestion(idx)}>
-                {t('deleteQuestion')}
-              </Button>
+              <div className="flex justify-end">
+                <Button type="button" variant="ghost" onClick={() => removeQuestion(idx)}>
+                  {t('deleteQuestion')}
+                </Button>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-        {questions.length === 0 && (
-          <p className="text-sm text-slate-500">{t('noQuestions')}</p>
-        )}
+          {questions.length === 0 && (
+            <p className="text-sm text-slate-500">{t('noQuestions')}</p>
+          )}
+          {questions.length > 0 && filteredQuestions.length === 0 && (
+            <p className="text-sm text-slate-500">{t('noQuestionsMatch')}</p>
+          )}
+        </div>
       </div>
 
       <div className="flex gap-2">

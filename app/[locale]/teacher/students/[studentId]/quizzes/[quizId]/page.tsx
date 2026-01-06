@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Course, Quiz, QuizQuestion, QuizSubmission } from '@/lib/mockData'
 import { LessonContent } from '@/components/lesson/LessonContent'
+import { Checkbox } from '@/components/ui/checkbox'
 
 export default function TeacherStudentQuizPage({
   params,
@@ -18,6 +19,7 @@ export default function TeacherStudentQuizPage({
   const [course, setCourse] = useState<Course | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showCorrectAnswers, setShowCorrectAnswers] = useState(true)
 
   useEffect(() => {
     const load = async () => {
@@ -92,6 +94,14 @@ export default function TeacherStudentQuizPage({
           Score: {submission.earned} / {submission.possible}
         </p>
         <p className="text-xs text-slate-500">Submitted at: {submission.submittedAt}</p>
+        <label className="mt-3 flex items-center gap-2 text-sm text-slate-600">
+          <Checkbox
+            checked={showCorrectAnswers}
+            onCheckedChange={checked => setShowCorrectAnswers(checked === true)}
+            aria-label="Show correct answers"
+          />
+          Show correct answers
+        </label>
       </div>
 
       <div className="space-y-3">
@@ -130,10 +140,12 @@ export default function TeacherStudentQuizPage({
                 <p className="text-slate-700">{selectedLabel}</p>
               </div>
 
-              <div className="rounded border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
-                <p className="font-medium text-slate-800">Correct answer</p>
-                <p className="text-slate-700">{correctLabel}</p>
-              </div>
+              {showCorrectAnswers && (
+                <div className="rounded border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+                  <p className="font-medium text-slate-800">Correct answer</p>
+                  <p className="text-slate-700">{correctLabel}</p>
+                </div>
+              )}
 
               {q.explanation && (
                 <div className="rounded-md bg-blue-50 border border-blue-100 px-3 py-2 text-xs text-slate-700 space-y-1">

@@ -16,10 +16,6 @@ type Props = {
 
 type SortOrder = 'newest' | 'oldest'
 
-function isExternalLink(href?: string) {
-  return Boolean(href && /^https?:\/\//i.test(href))
-}
-
 function getTimestamp(item: NewsItem) {
   const raw = item.date ?? item.createdAt ?? ''
   const ts = Date.parse(raw)
@@ -48,20 +44,8 @@ function NewsCard({item}: {item: NewsItem}) {
     </Card>
   )
 
-  if (!item.href) {
-    return cardContent
-  }
-
-  if (isExternalLink(item.href)) {
-    return (
-      <a href={item.href} target="_blank" rel="noreferrer" className="block">
-        {cardContent}
-      </a>
-    )
-  }
-
   return (
-    <Link href={item.href} className="block">
+    <Link href={`/news/${item.id}`} className="block">
       {cardContent}
     </Link>
   )

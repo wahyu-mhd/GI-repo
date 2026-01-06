@@ -4,10 +4,12 @@
     "courseId": "course-1",
     "title": "Addition Quiz 1",
     "description": "Check your understanding of basic addition.",
-    "maxAttempts": 1,
+    "maxAttempts": 2,
     "timeLimitMinutes": 4,
     "availableFrom": "2025-12-10T13:22:00.000Z",
-    "availableUntil": "2025-12-10T13:23:00.000Z"
+    "availableUntil": "2025-12-10T13:23:00.000Z",
+    "showScoreToStudent": false,
+    "showCorrectAnswersToStudent": false
   },
   {
     "id": "quiz-1765006830973",

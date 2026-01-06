@@ -55,6 +55,8 @@ type FormValues = {
   timeLimitMinutes?: number | ''
   availableFrom?: string | ''
   availableUntil?: string | ''
+  showScoreToStudent?: boolean
+  showCorrectAnswersToStudent?: boolean
   questions: Question[]
 }
 
@@ -107,6 +109,8 @@ export default function NewQuizPage(){
         timeLimitMinutes: '',
         availableFrom: '',
         availableUntil: '',
+        showScoreToStudent: true,
+        showCorrectAnswersToStudent: true,
         questions: [
             { type: 'single', text: '', explanation: '', choices: ['', '', ''], correctIndex: 0, correctIndices: [], correctPoints: 1, wrongPoints: 0, skipPoints: 0 },
         ],
@@ -204,6 +208,8 @@ export default function NewQuizPage(){
             timeLimitMinutes: Number.isFinite(parsedTimeLimit) ? parsedTimeLimit : undefined,
             availableFrom: normalizedAvailableFrom,
             availableUntil: normalizedAvailableUntil,
+            showScoreToStudent: values.showScoreToStudent ?? true,
+            showCorrectAnswersToStudent: values.showCorrectAnswersToStudent ?? true,
             questions: sanitizedQuestions,
           }),
         })
@@ -530,6 +536,36 @@ export default function NewQuizPage(){
                     </FormItem>
                   )} />
                 </div>
+                <FormField name="showScoreToStudent" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center gap-2">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value ?? true}
+                          onCheckedChange={checked => field.onChange(checked === true)}
+                        />
+                      </FormControl>
+                      <FormLabel className="font-normal">{t('showScoreToStudents')}</FormLabel>
+                    </div>
+                    <p className="text-xs text-slate-500">{t('showScoreToStudentsHelp')}</p>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField name="showCorrectAnswersToStudent" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center gap-2">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value ?? true}
+                          onCheckedChange={checked => field.onChange(checked === true)}
+                        />
+                      </FormControl>
+                      <FormLabel className="font-normal">{t('showCorrectAnswersToStudents')}</FormLabel>
+                    </div>
+                    <p className="text-xs text-slate-500">{t('showCorrectAnswersToStudentsHelp')}</p>
+                    <FormMessage />
+                  </FormItem>
+                )} />
                 <div className="rounded border p-3 space-y-2 bg-slate-50">
                   <div className="flex items-center justify-between text-sm">
                     <div>

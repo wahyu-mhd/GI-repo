@@ -8,6 +8,10 @@ import { LessonContent } from "@/components/lesson/LessonContent"
 
 export const dynamic = "force-dynamic"
 
+function isExternalLink(href?: string) {
+  return Boolean(href && /^https?:\/\//i.test(href))
+}
+
 function findNewsItem(items: Awaited<ReturnType<typeof readNews>>, slug: string) {
   return items.find(item => {
     if (item.id === slug) return true
@@ -44,6 +48,16 @@ export default async function NewsDetailPage({
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">{item.title}</h1>
           <p className="text-slate-500">{item.excerpt}</p>
+          {isExternalLink(item.href) && (
+            <a
+              href={item.href}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex text-sm text-blue-600 hover:underline"
+            >
+              {t("externalLink")}
+            </a>
+          )}
         </div>
 
         <div className="relative w-full h-64 md:h-80 rounded-xl overflow-hidden bg-slate-100">

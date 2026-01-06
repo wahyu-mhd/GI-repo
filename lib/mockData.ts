@@ -72,6 +72,8 @@ export type Quiz = {
   timeLimitMinutes?: number
   availableFrom?: string   // ISO string when quiz opens
   availableUntil?: string  // ISO string when quiz closes
+  showScoreToStudent?: boolean
+  showCorrectAnswersToStudent?: boolean
 }
 
 export type QuizSubmissionResponse = {
@@ -216,6 +218,8 @@ export const mockQuizzes: Quiz[] = [
     courseId: 'course-1',
     title: 'Addition Quiz 1',
     description: 'Check your understanding of basic addition.',
+    showScoreToStudent: true,
+    showCorrectAnswersToStudent: true,
   },
 ]
 

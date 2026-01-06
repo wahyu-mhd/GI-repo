@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -63,6 +64,7 @@ export function CourseQuestions({ courseId, viewerRole, viewerName, viewerId }: 
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({})
   const [replyVisibility, setReplyVisibility] = useState<Record<string, 'public' | 'private'>>({})
   const [postingReply, setPostingReply] = useState<Record<string, boolean>>({})
+  const [searchTerm, setSearchTerm] = useState('')
 
   const sortedQuestions = useMemo(
     () =>
@@ -71,6 +73,24 @@ export function CourseQuestions({ courseId, viewerRole, viewerName, viewerId }: 
       ),
     [questions]
   )
+  const filteredQuestions = useMemo(() => {
+    const normalized = searchTerm.trim().toLowerCase()
+    if (!normalized) return sortedQuestions
+    return sortedQuestions.filter(question => {
+      const replyText = question.reply
+        ? `${question.reply.teacherName} ${question.reply.message}`
+        : ''
+      const haystack = [
+        question.studentName,
+        question.message,
+        replyText,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      return haystack.includes(normalized)
+    })
+  }, [searchTerm, sortedQuestions])
 
   const loadQuestions = async () => {
     try {
@@ -201,6 +221,15 @@ export function CourseQuestions({ courseId, viewerRole, viewerName, viewerId }: 
         </div>
       )}
 
+      <div className="max-w-md">
+        <Input
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          placeholder={t('searchPlaceholder')}
+          aria-label={t('searchPlaceholder')}
+        />
+      </div>
+
       {error && <p className="text-sm text-red-600">{error}</p>}
       {loading && !error && <p className="text-sm text-slate-500">{t('loading')}</p>}
 
@@ -210,8 +239,12 @@ export function CourseQuestions({ courseId, viewerRole, viewerName, viewerId }: 
         </p>
       )}
 
-      <div className="space-y-3">
-        {sortedQuestions.map(question => {
+      {!loading && !error && sortedQuestions.length > 0 && filteredQuestions.length === 0 && (
+        <p className="text-sm text-slate-500">{t('noResults')}</p>
+      )}
+
+      <div className="max-h-[60vh] space-y-3 overflow-y-auto pr-1">
+        {filteredQuestions.map(question => {
           const askedBySelf = viewerId && question.studentId === viewerId
           const replyTag =
             question.reply?.visibility === 'public' ? t('replyPublicTag') : t('replyPrivateTag')

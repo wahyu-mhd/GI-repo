@@ -58,5 +58,11 @@
     "courseId": "course-1764669321956",
     "title": "grammar",
     "order": 3
+  },
+  {
+    "id": "module-1767023215309-10",
+    "courseId": "course-1",
+    "title": "Linear algebra",
+    "order": 2
   }
 ]

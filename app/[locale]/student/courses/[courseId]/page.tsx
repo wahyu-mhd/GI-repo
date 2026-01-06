@@ -8,6 +8,7 @@ import { Course, Lesson, Module, Quiz } from '@/lib/mockData'
 import { loadMockSession } from '@/lib/sessionMock'
 import { CourseAnnouncements } from '@/components/announcements/CourseAnnouncements'
 import { CourseQuestions } from '@/components/questions/CourseQuestions'
+import { Input } from '@/components/ui/input'
 
 type Props = {
   params: Promise<{ courseId: string }>
@@ -38,6 +39,9 @@ export default function StudentCourseDetailPage({ params }: Props) {
   const [authorized, setAuthorized] = useState(false)
   const [viewerName, setViewerName] = useState('Student User')
   const [studentId, setStudentId] = useState<string>('user-student-1')
+  const [moduleQuery, setModuleQuery] = useState('')
+  const [quizQuery, setQuizQuery] = useState('')
+  const [feedbackQuery, setFeedbackQuery] = useState('')
 
   useEffect(() => {
     const session = loadMockSession()
@@ -108,6 +112,59 @@ export default function StudentCourseDetailPage({ params }: Props) {
     const elapsed = Date.now() - new Date(item.readAt).getTime()
     return elapsed < twelveHoursMs
   })
+  const lessonsByModule = useMemo(() => {
+    const map = new Map<string, Lesson[]>()
+    lessons.forEach(lesson => {
+      const list = map.get(lesson.moduleId) ?? []
+      list.push(lesson)
+      map.set(lesson.moduleId, list)
+    })
+    return map
+  }, [lessons])
+  const normalizedModuleQuery = moduleQuery.trim().toLowerCase()
+  const filteredModules = useMemo(() => {
+    if (!normalizedModuleQuery) {
+      return modules.map(module => ({
+        module,
+        lessons: lessonsByModule.get(module.id) ?? [],
+      }))
+    }
+    return modules.reduce((acc, module) => {
+      const moduleLessons = lessonsByModule.get(module.id) ?? []
+      const moduleMatches = module.title.toLowerCase().includes(normalizedModuleQuery)
+      const matchingLessons = moduleMatches
+        ? moduleLessons
+        : moduleLessons.filter(lesson =>
+            lesson.title.toLowerCase().includes(normalizedModuleQuery)
+          )
+      if (moduleMatches || matchingLessons.length > 0) {
+        acc.push({ module, lessons: matchingLessons })
+      }
+      return acc
+    }, [] as { module: Module; lessons: Lesson[] }[])
+  }, [lessonsByModule, modules, normalizedModuleQuery])
+  const normalizedQuizQuery = quizQuery.trim().toLowerCase()
+  const filteredQuizzes = useMemo(() => {
+    if (!normalizedQuizQuery) return quizzes
+    return quizzes.filter(quiz => {
+      const haystack = [quiz.title, quiz.description]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      return haystack.includes(normalizedQuizQuery)
+    })
+  }, [normalizedQuizQuery, quizzes])
+  const normalizedFeedbackQuery = feedbackQuery.trim().toLowerCase()
+  const filteredFeedback = useMemo(() => {
+    if (!normalizedFeedbackQuery) return visibleFeedback
+    return visibleFeedback.filter(item => {
+      const haystack = [item.teacherName, item.message]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      return haystack.includes(normalizedFeedbackQuery)
+    })
+  }, [normalizedFeedbackQuery, visibleFeedback])
 
   const markAsRead = async (id: string) => {
     try {
@@ -164,88 +221,141 @@ export default function StudentCourseDetailPage({ params }: Props) {
           />
 
           <h2 className="font-semibold">{t('modulesHeading')}</h2>
-          {modules.map(module => {
-            const moduleLessons = lessons.filter(l => l.moduleId === module.id)
-            return (
-              <div key={module.id} className="rounded-lg border bg-white p-3">
-                <h3 className="font-medium">{module.title}</h3>
-                <ul className="mt-2 space-y-1 text-sm">
-                  {moduleLessons.map(lesson => (
-                    <li key={lesson.id}>
-                      <Link
-                        href={`/student/courses/${course.id}/lessons/${lesson.id}`}
-                        className="text-blue-600 hover:underline"
-                      >
-                        {lesson.title}
-                      </Link>
-                    </li>
-                  ))}
-                  {moduleLessons.length === 0 && (
-                    <li className="text-xs text-slate-400">{t('noLessons')}</li>
-                  )}
-                </ul>
-              </div>
-            )
-          })}
+          {modules.length > 0 && (
+            <div className="max-w-md">
+              <Input
+                value={moduleQuery}
+                onChange={event => setModuleQuery(event.target.value)}
+                placeholder={t('modulesSearchPlaceholder')}
+                aria-label={t('modulesSearchPlaceholder')}
+              />
+            </div>
+          )}
+
           {modules.length === 0 && (
             <p className="text-sm text-slate-500">{t('noModules')}</p>
+          )}
+
+          {modules.length > 0 && normalizedModuleQuery && filteredModules.length === 0 && (
+            <p className="text-sm text-slate-500">{t('modulesNoResults')}</p>
+          )}
+
+          {filteredModules.length > 0 && (
+            <div className="max-h-[60vh] space-y-3 overflow-y-auto pr-1">
+              {filteredModules.map(({ module, lessons }) => (
+                <div key={module.id} className="rounded-lg border bg-white p-3">
+                  <h3 className="font-medium">{module.title}</h3>
+                  <ul className="mt-2 space-y-1 text-sm">
+                    {lessons.map(lesson => (
+                      <li key={lesson.id}>
+                        <Link
+                          href={`/student/courses/${course.id}/lessons/${lesson.id}`}
+                          className="text-blue-600 hover:underline"
+                        >
+                          {lesson.title}
+                        </Link>
+                      </li>
+                    ))}
+                    {lessons.length === 0 && (
+                      <li className="text-xs text-slate-400">{t('noLessons')}</li>
+                    )}
+                  </ul>
+                </div>
+              ))}
+            </div>
           )}
         </div>
 
         <div className="space-y-3">
           <h2 className="font-semibold">{t('feedbackHeading')}</h2>
-          <div className="space-y-2">
-            {visibleFeedback.map(item => (
-              <div key={item.id} className="rounded-lg border bg-white p-3 text-sm">
-                <div className="flex justify-between text-xs text-slate-500">
-                  <span>{t('feedbackFrom', { name: item.teacherName })}</span>
-                  <span>{new Date(item.createdAt).toLocaleString(undefined, {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: false,
-                  })}</span>
-                </div>
-                <p className="mt-1 text-slate-800">{item.message}</p>
-                {!item.read && (
-                  <div className="mt-2 flex justify-end">
-                    <button
-                      className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700"
-                      onClick={() => markAsRead(item.id)}
-                    >
-                      {t('markRead')}
-                    </button>
+          {visibleFeedback.length > 0 && (
+            <div className="max-w-md">
+              <Input
+                value={feedbackQuery}
+                onChange={event => setFeedbackQuery(event.target.value)}
+                placeholder={t('feedbackSearchPlaceholder')}
+                aria-label={t('feedbackSearchPlaceholder')}
+              />
+            </div>
+          )}
+
+          {visibleFeedback.length === 0 && (
+            <p className="text-xs text-slate-400">{t('noFeedback')}</p>
+          )}
+
+          {visibleFeedback.length > 0 && normalizedFeedbackQuery && filteredFeedback.length === 0 && (
+            <p className="text-xs text-slate-400">{t('feedbackNoResults')}</p>
+          )}
+
+          {filteredFeedback.length > 0 && (
+            <div className="max-h-[360px] space-y-2 overflow-y-auto pr-1">
+              {filteredFeedback.map(item => (
+                <div key={item.id} className="rounded-lg border bg-white p-3 text-sm">
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span>{t('feedbackFrom', { name: item.teacherName })}</span>
+                    <span>{new Date(item.createdAt).toLocaleString(undefined, {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: false,
+                    })}</span>
                   </div>
-                )}
-              </div>
-            ))}
-            {visibleFeedback.length === 0 && (
-              <p className="text-xs text-slate-400">{t('noFeedback')}</p>
-            )}
-          </div>
+                  <p className="mt-1 text-slate-800">{item.message}</p>
+                  {!item.read && (
+                    <div className="mt-2 flex justify-end">
+                      <button
+                        className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700"
+                        onClick={() => markAsRead(item.id)}
+                      >
+                        {t('markRead')}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
           <h2 className="font-semibold">{t('quizzesHeading')}</h2>
-          <div className="space-y-2">
-            {quizzes.map(quiz => (
-              <Link
-                key={quiz.id}
-                href={`/student/courses/${course.id}/quizzes/${quiz.id}`}
-                className="block rounded-lg border bg-white p-3 text-sm hover:shadow-sm"
-              >
-                <div className="font-medium">{quiz.title}</div>
-                {quiz.description && (
-                  <p className="text-xs text-slate-600 mt-1">
-                    {quiz.description}
-                  </p>
-                )}
-              </Link>
-            ))}
-            {quizzes.length === 0 && (
-              <p className="text-xs text-slate-400">{t('noQuizzes')}</p>
-            )}
-          </div>
+          {quizzes.length > 0 && (
+            <div className="max-w-md">
+              <Input
+                value={quizQuery}
+                onChange={event => setQuizQuery(event.target.value)}
+                placeholder={t('quizzesSearchPlaceholder')}
+                aria-label={t('quizzesSearchPlaceholder')}
+              />
+            </div>
+          )}
+
+          {quizzes.length === 0 && (
+            <p className="text-xs text-slate-400">{t('noQuizzes')}</p>
+          )}
+
+          {quizzes.length > 0 && normalizedQuizQuery && filteredQuizzes.length === 0 && (
+            <p className="text-xs text-slate-400">{t('quizzesNoResults')}</p>
+          )}
+
+          {filteredQuizzes.length > 0 && (
+            <div className="max-h-[360px] space-y-2 overflow-y-auto pr-1">
+              {filteredQuizzes.map(quiz => (
+                <Link
+                  key={quiz.id}
+                  href={`/student/courses/${course.id}/quizzes/${quiz.id}`}
+                  className="block rounded-lg border bg-white p-3 text-sm hover:shadow-sm"
+                >
+                  <div className="font-medium">{quiz.title}</div>
+                  {quiz.description && (
+                    <p className="text-xs text-slate-600 mt-1">
+                      {quiz.description}
+                    </p>
+                  )}
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>

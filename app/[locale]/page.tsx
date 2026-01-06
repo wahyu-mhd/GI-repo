@@ -45,9 +45,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         {/* --- HERO SECTION --- */}
         <div className="grid gap-12 md:grid-cols-2 items-center">
           <div className="space-y-8">
-            <Badge variant="secondary" className="px-4 py-1 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full">
+            {/* <Badge variant="secondary" className="px-4 py-1 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full">
               {t('heroBadge')}
-            </Badge>
+            </Badge> */}
 
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900">
               {t('heroTitle.line1')} <br />
@@ -245,20 +245,8 @@ function NewsCard({ item }: { item: NewsItem }) {
     </Card>
   )
 
-  if (!item.href) {
-    return cardContent
-  }
-
-  if (/^https?:\/\//i.test(item.href)) {
-    return (
-      <a href={item.href} target="_blank" rel="noreferrer" className="block group">
-        {cardContent}
-      </a>
-    )
-  }
-
   return (
-    <Link href={item.href} className="block group">
+    <Link href={`/news/${item.id}`} className="block group">
       {cardContent}
     </Link>
   )

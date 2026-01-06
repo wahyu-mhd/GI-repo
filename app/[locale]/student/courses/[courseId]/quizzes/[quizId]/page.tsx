@@ -208,6 +208,8 @@ export default function QuizPage({params}: Props) {
   const scoreSummary = submission
     ? {earned: submission.earned, possible: submission.possible}
     : null
+  const canShowScore = quiz.showScoreToStudent !== false
+  const canShowAnswers = quiz.showCorrectAnswersToStudent !== false
 
   return (
     <section className="space-y-4">
@@ -259,13 +261,15 @@ export default function QuizPage({params}: Props) {
                   const selected = response ? response.selectedIndex : answers[qIndex]
                   const isSelected = selected === cIndex
                   const isCorrect =
-                    submitted && response
+                    canShowAnswers &&
+                    (submitted && response
                       ? response.isCorrect && cIndex === response.correctIndex
-                      : submitted && cIndex === q.correctIndex
+                      : submitted && cIndex === q.correctIndex)
                   const isWrong =
-                    submitted && response
+                    canShowAnswers &&
+                    (submitted && response
                       ? !response.isCorrect && isSelected
-                      : submitted && isSelected && cIndex !== q.correctIndex
+                      : submitted && isSelected && cIndex !== q.correctIndex)
 
                   return (
                     <button
@@ -274,9 +278,13 @@ export default function QuizPage({params}: Props) {
                       onClick={() => handleSelect(qIndex, cIndex)}
                       className={[
                         'block w-full text-left rounded border px-3 py-2 text-sm',
-                        isSelected ? 'border-blue-500' : 'border-slate-200',
-                        isCorrect ? 'bg-green-50 border-green-500' : '',
-                        isWrong ? 'bg-red-50 border-red-500' : ''
+                        isSelected ? 'border-blue-500 dark:border-blue-400' : 'border-slate-200 dark:border-slate-700',
+                        isCorrect
+                          ? 'bg-green-50 border-green-500 dark:bg-emerald-950/40 dark:border-emerald-400'
+                          : '',
+                        isWrong
+                          ? 'bg-red-50 border-red-500 dark:bg-rose-950/40 dark:border-rose-400'
+                          : ''
                       ]
                         .filter(Boolean)
                         .join(' ')}
@@ -286,9 +294,9 @@ export default function QuizPage({params}: Props) {
                   )
                 })}
               </div>
-              {submitted && q.explanation && (
-                <div className="rounded-md bg-blue-50 border border-blue-100 px-3 py-2 text-xs text-slate-700 space-y-1">
-                  <span className="font-semibold text-slate-800 block">{t('explanation')}</span>
+              {submitted && canShowAnswers && q.explanation && (
+                <div className="rounded-md bg-blue-50 border border-blue-100 px-3 py-2 text-xs text-slate-700 space-y-1 dark:bg-slate-900/40 dark:border-slate-700 dark:text-slate-200">
+                  <span className="font-semibold text-slate-800 block dark:text-slate-100">{t('explanation')}</span>
                   <LessonContent content={q.explanation} />
                 </div>
               )}
@@ -307,9 +315,16 @@ export default function QuizPage({params}: Props) {
           {submitting ? t('submitting') : t('submit')}
         </button>
       ) : (
-        <p className="text-sm font-semibold">
-          {t('score', {earned: scoreSummary?.earned ?? 0, possible: scoreSummary?.possible ?? 0})}
-        </p>
+        canShowScore ? (
+          <p className="text-sm font-semibold">
+            {t('score', {earned: scoreSummary?.earned ?? 0, possible: scoreSummary?.possible ?? 0})}
+          </p>
+        ) : (
+          <p className="text-sm text-slate-600">{t('scoreHidden')}</p>
+        )
+      )}
+      {submitted && !canShowAnswers && (
+        <p className="text-xs text-slate-500">{t('answersHidden')}</p>
       )}
       {submitError && <p className="text-xs text-red-600">{submitError}</p>}
     </section>

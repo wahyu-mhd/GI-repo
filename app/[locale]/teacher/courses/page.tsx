@@ -13,6 +13,7 @@ export default function TeacherCoursesPage() {
   const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
     const load = async () => {
@@ -39,6 +40,24 @@ export default function TeacherCoursesPage() {
   const myCourses = isSuperuser
     ? courses
     : courses.filter(c => c.teacherId === teacherId)
+  const normalizedQuery = searchTerm.trim().toLowerCase()
+  const filteredCourses = normalizedQuery
+    ? myCourses.filter(course => {
+        const searchableText = [
+          course.title,
+          course.description,
+          course.subject,
+          course.stage,
+          `grade ${course.grade}`
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+
+        return searchableText.includes(normalizedQuery)
+      })
+    : myCourses
+  const showSearch = !loading && !error && myCourses.length > 0
 
   return (
     <section className="space-y-4">
@@ -68,8 +87,28 @@ export default function TeacherCoursesPage() {
         <p className="text-sm text-slate-500">{t('empty')}</p>
       )}
 
-      <div className="space-y-3">
-        {myCourses.map(course => (
+      {showSearch && (
+        <div className="rounded-lg border bg-white p-3">
+          <label htmlFor="course-search" className="sr-only">
+            {t('searchPlaceholder')}
+          </label>
+          <input
+            id="course-search"
+            type="search"
+            value={searchTerm}
+            onChange={event => setSearchTerm(event.target.value)}
+            placeholder={t('searchPlaceholder')}
+            className="w-full rounded border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+      )}
+
+      {!loading && !error && showSearch && filteredCourses.length === 0 && (
+        <p className="text-sm text-slate-500">{t('noResults')}</p>
+      )}
+
+      <div className="max-h-[60vh] space-y-3 overflow-y-auto pr-1">
+        {filteredCourses.map(course => (
           <Link
             key={course.id}
             href={`/teacher/courses/${course.id}`}

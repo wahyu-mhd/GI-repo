@@ -9,6 +9,8 @@ import type {Course} from '@/lib/mockData'
 import type {CourseTeacher} from '@/lib/courseTeacherStore'
 import type {NewsItem} from '@/lib/newsFileStore'
 import {RichTextEditor} from '@/components/editor/RichTextEditor'
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select'
+import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs'
 
 export default function SuperuserDashboardPage() {
   const t = useTranslations('superuser')
@@ -400,6 +402,18 @@ export default function SuperuserDashboardPage() {
     }
   }
 
+  const handleNewsImageUpload = (files: FileList | null) => {
+    if (!files || !files[0]) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result
+      if (typeof result === 'string') {
+        setNewsForm(prev => ({...prev, image: result}))
+      }
+    }
+    reader.readAsDataURL(files[0])
+  }
+
   const handleEditNews = (item: NewsItem) => {
     setEditingNewsId(item.id)
     setNewsForm({
@@ -720,30 +734,30 @@ export default function SuperuserDashboardPage() {
             onChange={e => setStudentQuery(e.target.value)}
           />
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <select
-              className="rounded border px-3 py-2 text-sm"
-              value={selectedStudent}
-              onChange={e => setSelectedStudent(e.target.value)}
-            >
-              <option value="">{t('selectStudent')}</option>
-              {filteredStudentsForEnroll.map(s => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-            <select
-              className="rounded border px-3 py-2 text-sm"
-              value={selectedCourse}
-              onChange={e => setSelectedCourse(e.target.value)}
-            >
-              <option value="">{t('selectCourse')}</option>
-              {courses.map(c => (
-                <option key={c.id} value={c.id}>
-                  {c.title}
-                </option>
-              ))}
-            </select>
+            <Select value={selectedStudent} onValueChange={setSelectedStudent}>
+              <SelectTrigger className="w-full md:w-64">
+                <SelectValue placeholder={t('selectStudent')} />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                {filteredStudentsForEnroll.map(s => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedCourse} onValueChange={setSelectedCourse}>
+              <SelectTrigger className="w-full md:w-64">
+                <SelectValue placeholder={t('selectCourse')} />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                {courses.map(c => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <button
               className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
               onClick={handleEnroll}
@@ -756,7 +770,7 @@ export default function SuperuserDashboardPage() {
         <div className="text-xs text-slate-500">
           {t('currentEnrollments', {count: enrollments.length})}
         </div>
-        <div className="space-y-2 text-sm">
+        <div className="space-y-2 text-sm max-h-96 overflow-y-auto pr-1">
           {enrollments.map(enroll => {
             const student = students.find(s => s.id === enroll.studentId)
             const course = courses.find(c => c.id === enroll.courseId)
@@ -789,32 +803,32 @@ export default function SuperuserDashboardPage() {
         <h2 className="text-lg font-semibold">{t('assignTeacherTitle')}</h2>
         <p className="text-xs text-slate-500">{t('assignTeacherHelp')}</p>
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
-          <select
-            className="rounded border px-3 py-2 text-sm"
-            value={selectedTeacherForCourse}
-            onChange={e => setSelectedTeacherForCourse(e.target.value)}
-          >
-            <option value="">{t('selectTeacher')}</option>
-            {teachers
-              .filter(tchr => tchr.role === 'teacher')
-              .map(tchr => (
-                <option key={tchr.id} value={tchr.id}>
-                  {tchr.name}
-                </option>
+          <Select value={selectedTeacherForCourse} onValueChange={setSelectedTeacherForCourse}>
+            <SelectTrigger className="w-full md:w-64">
+              <SelectValue placeholder={t('selectTeacher')} />
+            </SelectTrigger>
+            <SelectContent className="max-h-60">
+              {teachers
+                .filter(tchr => tchr.role === 'teacher')
+                .map(tchr => (
+                  <SelectItem key={tchr.id} value={tchr.id}>
+                    {tchr.name}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedCourseForTeacher} onValueChange={setSelectedCourseForTeacher}>
+            <SelectTrigger className="w-full md:w-64">
+              <SelectValue placeholder={t('selectCourse')} />
+            </SelectTrigger>
+            <SelectContent className="max-h-60">
+              {courses.map(c => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.title}
+                </SelectItem>
               ))}
-          </select>
-          <select
-            className="rounded border px-3 py-2 text-sm"
-            value={selectedCourseForTeacher}
-            onChange={e => setSelectedCourseForTeacher(e.target.value)}
-          >
-            <option value="">{t('selectCourse')}</option>
-            {courses.map(c => (
-              <option key={c.id} value={c.id}>
-                {c.title}
-              </option>
-            ))}
-          </select>
+            </SelectContent>
+          </Select>
           <button
             className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
             onClick={handleAddTeacherToCourse}
@@ -826,7 +840,7 @@ export default function SuperuserDashboardPage() {
         <div className="text-xs text-slate-500">
           {t('currentCourseTeachers', {count: courseTeachers.length})}
         </div>
-        <div className="space-y-2 text-sm">
+        <div className="space-y-2 text-sm max-h-96 overflow-y-auto pr-1">
           {courseTeachers.map(entry => {
             const teacher = teachers.find(tchr => tchr.id === entry.teacherId)
             const course = courses.find(c => c.id === entry.courseId)
@@ -899,13 +913,41 @@ export default function SuperuserDashboardPage() {
                 onChange={e => setNewsForm(prev => ({...prev, date: e.target.value}))}
                 required
               />
-              <input
-                type="text"
-                className="rounded border px-3 py-2 text-sm"
-                placeholder={t('news.imagePlaceholder')}
-                value={newsForm.image}
-                onChange={e => setNewsForm(prev => ({...prev, image: e.target.value}))}
-              />
+              <div className="sm:col-span-2">
+                <Tabs defaultValue="url">
+                  <TabsList className="w-full">
+                    <TabsTrigger value="url" className="w-full">
+                      {t('news.imageTabUrl')}
+                    </TabsTrigger>
+                    <TabsTrigger value="upload" className="w-full">
+                      {t('news.imageTabUpload')}
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="url">
+                    <label className="text-xs font-medium text-slate-600">
+                      {t('news.imageUrlLabel')}
+                    </label>
+                    <input
+                      type="text"
+                      className="mt-2 w-full rounded border px-3 py-2 text-sm"
+                      placeholder={t('news.imagePlaceholder')}
+                      value={newsForm.image}
+                      onChange={e => setNewsForm(prev => ({...prev, image: e.target.value}))}
+                    />
+                  </TabsContent>
+                  <TabsContent value="upload">
+                    <label className="text-xs font-medium text-slate-600">
+                      {t('news.imageUploadLabel')}
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="mt-2 w-full rounded border px-3 py-2 text-sm"
+                      onChange={e => handleNewsImageUpload(e.target.files)}
+                    />
+                  </TabsContent>
+                </Tabs>
+              </div>
             </div>
             <input
               type="text"
