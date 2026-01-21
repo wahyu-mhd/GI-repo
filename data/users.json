@@ -11,7 +11,7 @@
     "name": "Wahyu",
     "role": "teacher",
     "email": "wahyu@example.com",
-    "canManageStudents": false
+    "canManageStudents": true
   },
   {
     "id": "user-teacher-2",
@@ -32,14 +32,6 @@
     "name": "Student User",
     "role": "student",
     "email": "student@example.com"
-  },
-  {
-    "id": "user-1765121767160-4",
-    "name": "testing",
-    "email": "robokeycopz@gmail.com",
-    "role": "teacher",
-    "canManageStudents": false,
-    "tempPassword": "student_691863"
   },
   {
     "id": "user-1765122120235-5",

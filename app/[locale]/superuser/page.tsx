@@ -3,7 +3,9 @@
 import {useEffect, useMemo, useState} from 'react'
 import {useTranslations} from 'next-intl'
 import {Link} from '@/navigation'
-import {loadMockSession, clearMockSession, type SessionUser} from '@/lib/sessionMock'
+// import {loadMockSession, clearMockSession, type SessionUser} from '@/lib/sessionMock'
+import {createClient} from '@/lib/supabase/client'
+import {useRouter} from 'next/navigation'
 import type {User, Enrollment} from '@/lib/userStore'
 import type {Course} from '@/lib/mockData'
 import type {CourseTeacher} from '@/lib/courseTeacherStore'
@@ -14,7 +16,12 @@ import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs'
 
 export default function SuperuserDashboardPage() {
   const t = useTranslations('superuser')
-  const [session, setSession] = useState<SessionUser | null>(null)
+  const supabase = createClient()
+  const router = useRouter()
+  const [authRole, setAuthRole] = useState<string | null>(null)
+  const [authChecked, setAuthChecked] = useState(false)
+
+  // const [session, setSession] = useState<SessionUser | null>(null)
   const [hydrated, setHydrated] = useState(false)
   const [teachers, setTeachers] = useState<User[]>([])
   const [students, setStudents] = useState<User[]>([])
@@ -30,7 +37,6 @@ export default function SuperuserDashboardPage() {
   const [userQuery, setUserQuery] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [savingToggle, setSavingToggle] = useState<string | null>(null)
   const [addingEnrollment, setAddingEnrollment] = useState(false)
   const [removingUser, setRemovingUser] = useState<string | null>(null)
   const [removingEnrollment, setRemovingEnrollment] = useState<string | null>(null)
@@ -67,18 +73,46 @@ export default function SuperuserDashboardPage() {
     role: 'student' | 'teacher'
     name: string
     email: string
-    canManageStudents: boolean
   }>({
     role: 'student',
     name: '',
-    email: '',
-    canManageStudents: false
+    email: ''
   })
 
   useEffect(() => {
-    setSession(loadMockSession())
-    setHydrated(true)
-  }, [])
+    // setSession(loadMockSession())
+    // setHydrated(true)
+     let mounted = true
+
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        if (mounted) {
+          setAuthRole(null)
+          setAuthChecked(true)
+        }
+        return
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+      if (mounted) {
+        setAuthRole(profile?.role ?? null)
+        setAuthChecked(true)
+      }
+    }
+
+    checkAuth()
+
+    return () => {
+      mounted = false
+    }
+
+  }, [supabase])
 
   const loadData = async () => {
     setLoading(true)
@@ -109,11 +143,17 @@ export default function SuperuserDashboardPage() {
     }
   }
 
+  // useEffect(() => {
+  //   if (hydrated && session?.role === 'superuser') {
+  //     loadData()
+  //   }
+  // }, [hydrated, session, t])
   useEffect(() => {
-    if (hydrated && session?.role === 'superuser') {
+    if (authChecked && authRole === 'superuser') {
       loadData()
     }
-  }, [hydrated, session, t])
+  }, [authChecked, authRole, t])
+
 
   const filteredStudentsForEnroll = useMemo(
     () =>
@@ -164,24 +204,6 @@ export default function SuperuserDashboardPage() {
       }, {}),
     [courseTeachers]
   )
-
-  const handleToggle = async (id: string, value: boolean) => {
-    setSavingToggle(id)
-    try {
-      const res = await fetch('/api/superuser/teachers', {
-        method: 'PUT',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({id, canManageStudents: value})
-      })
-      if (!res.ok) throw new Error('failed')
-      await loadData()
-    } catch (err) {
-      console.error(err)
-      setError(t('updateTeacherError'))
-    } finally {
-      setSavingToggle(null)
-    }
-  }
 
   const handleDeleteUser = async (id: string) => {
     setRemovingUser(id)
@@ -341,13 +363,18 @@ export default function SuperuserDashboardPage() {
         body: JSON.stringify({
           role: newUser.role,
           name: newUser.name.trim(),
-          email: newUser.email.trim() || undefined,
-          canManageStudents: newUser.role === 'teacher' ? newUser.canManageStudents : undefined
+          email: newUser.email.trim()
         })
       })
-      if (!res.ok) throw new Error('failed')
-      setNewUser({role: 'student', name: '', email: '', canManageStudents: false})
-      await loadData()
+      // if (!res.ok) throw new Error('failed')
+      // setNewUser({role: 'student', name: '', email: ''})
+      // await loadData()
+      if (!res.ok) {
+        const text = await res.text()
+        console.error('Create user failed:', res.status, text)
+        setError(text || `Failed (${res.status})`)
+        return
+      }
     } catch (err) {
       console.error(err)
       setError(t('createUserError'))
@@ -446,7 +473,26 @@ export default function SuperuserDashboardPage() {
     }
   }
 
-  if (!hydrated) {
+  // if (!hydrated) {
+  //   return (
+  //     <div className="max-w-xl mx-auto mt-10 rounded border bg-white p-4 shadow-sm">
+  //       <p className="text-sm text-slate-600">{t('loading')}</p>
+  //     </div>
+  //   )
+  // }
+
+  // if (!session || session.role !== 'superuser') {
+  //   return (
+  //     <div className="max-w-xl mx-auto mt-10 rounded border bg-white p-4 shadow-sm">
+  //       <p className="text-sm text-red-600">{t('unauthorized')}</p>
+  //       <Link href="/auth/login?as=teacher" className="text-blue-600 text-sm hover:underline">
+  //         {t('loginLink')}
+  //       </Link>
+  //     </div>
+  //   )
+  // }
+
+  if (!authChecked) {
     return (
       <div className="max-w-xl mx-auto mt-10 rounded border bg-white p-4 shadow-sm">
         <p className="text-sm text-slate-600">{t('loading')}</p>
@@ -454,7 +500,7 @@ export default function SuperuserDashboardPage() {
     )
   }
 
-  if (!session || session.role !== 'superuser') {
+  if (authRole !== 'superuser') {
     return (
       <div className="max-w-xl mx-auto mt-10 rounded border bg-white p-4 shadow-sm">
         <p className="text-sm text-red-600">{t('unauthorized')}</p>
@@ -465,6 +511,7 @@ export default function SuperuserDashboardPage() {
     )
   }
 
+
   return (
     <section className="space-y-6">
       <div className="flex items-center justify-between">
@@ -474,9 +521,11 @@ export default function SuperuserDashboardPage() {
         </div>
         <button
           className="text-sm text-red-600 hover:underline"
-          onClick={() => {
-            clearMockSession()
-            window.location.href = '/auth/login?as=teacher'
+          onClick={async() => {
+            // clearMockSession()
+            // window.location.href = '/auth/login?as=teacher'
+            await supabase.auth.signOut()
+            router.push('/auth/login?as=teacher')
           }}
         >
           {t('logout')}
@@ -496,9 +545,7 @@ export default function SuperuserDashboardPage() {
                 <input
                   type="radio"
                   checked={newUser.role === 'student'}
-                  onChange={() =>
-                    setNewUser(prev => ({...prev, role: 'student', canManageStudents: false}))
-                  }
+                  onChange={() => setNewUser(prev => ({...prev, role: 'student'}))}
                 />
                 {t('roleStudent')}
               </label>
@@ -526,18 +573,6 @@ export default function SuperuserDashboardPage() {
               onChange={e => setNewUser(prev => ({...prev, email: e.target.value}))}
               required
             />
-            {newUser.role === 'teacher' && (
-              <label className="flex items-center gap-2 text-xs">
-                <input
-                  type="checkbox"
-                  checked={newUser.canManageStudents}
-                  onChange={e =>
-                    setNewUser(prev => ({...prev, canManageStudents: e.target.checked}))
-                  }
-                />
-                {t('canManageStudents')}
-              </label>
-            )}
             <div className="flex justify-end">
               <button
                 className="rounded bg-blue-600 px-4 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-60"
@@ -594,17 +629,8 @@ export default function SuperuserDashboardPage() {
                     </>
                   )}
                 </div>
-                <div className="flex items-center gap-3 text-xs">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={Boolean(tchr.canManageStudents)}
-                      onChange={e => handleToggle(tchr.id, e.target.checked)}
-                      disabled={savingToggle === tchr.id}
-                    />
-                    {t('canManageStudents')}
-                  </label>
-                  {tchr.role !== 'superuser' && (
+                  <div className="flex items-center gap-3 text-xs">
+                    {tchr.role !== 'superuser' && (
                     <>
                       {editingUserId === tchr.id ? (
                         <>

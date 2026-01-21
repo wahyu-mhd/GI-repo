@@ -159,13 +159,14 @@
       "password": "Kata sandi",
       "cta": "Masuk",
       "forgotTitle": "Lupa kata sandi?",
-      "forgotHelp": "Masukkan email siswa untuk menerima kata sandi reset.",
-      "forgotEmailPlaceholder": "Email siswa",
+      "forgotHelp": "Masukkan email anda untuk menerima kata sandi reset.",
+      "forgotEmailPlaceholder": "Email anda",
       "forgotCta": "Kirim email reset",
       "forgotSending": "Mengirim...",
       "forgotSuccess": "Email reset terkirim. Cek inbox kamu.",
       "forgotError": "Tidak dapat mengirim email reset.",
-      "disclaimer": "(Autentikasi belum terhubung — ini hanya login sementara)"
+      "disclaimer": "(Autentikasi belum terhubung — ini hanya login sementara)",
+      "loading" : "Memuat..."
     }
   },
   "teacher": {
