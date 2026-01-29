@@ -4,7 +4,7 @@ import {FormEvent, useEffect, useMemo, useState} from 'react'
 import {useTranslations} from 'next-intl'
 import {useRouter} from '@/navigation'
 import {Grade, Stage, Subject} from '@/lib/mockData'
-import {loadMockSession} from '@/lib/sessionMock'
+import {createClient} from '@/lib/supabase/client'
 
 const STAGES: Stage[] = ['elementary', 'junior', 'senior']
 const GRADES: Grade[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
@@ -22,23 +22,49 @@ const SUBJECTS: Subject[] = [
 export default function TeacherNewCoursePage() {
   const t = useTranslations('teacher.newCourse')
   const router = useRouter()
+  const supabase = useMemo(() => createClient(), [])
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [stage, setStage] = useState<Stage>('elementary')
   const [grade, setGrade] = useState<Grade>(1)
   const [subject, setSubject] = useState<Subject>('math')
-  const [teacherName, setTeacherName] = useState('Wahyu') // mock
-  const [teacherId, setTeacherId] = useState('user-teacher-1') // mock
+  const [teacherName, setTeacherName] = useState('')
+  const [teacherId, setTeacherId] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const session = loadMockSession()
-    if (session?.role === 'teacher') {
-      setTeacherId(session.id)
-      setTeacherName(session.name)
+    const loadTeacher = async () => {
+      const {data: {user}, error: userError} = await supabase.auth.getUser()
+
+      if (userError || !user) {
+        setError('Please log in as a teacher.')
+        router.push('/auth/login?as=teacher&redirectTo=/teacher/courses/new')
+        return
+      }
+
+      const {data: profile, error: profileError} = await supabase
+        .from('profiles')
+        .select('id, display_name, role')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError) {
+        setError(profileError.message)
+        return
+      }
+
+      if (profile?.role !== 'teacher') {
+        setError('You must be logged in as a teacher to create a course.')
+        return
+      }
+
+      setTeacherId(profile.id)
+      setTeacherName(profile.display_name ?? '')
     }
-  }, [])
+
+    loadTeacher()
+  }, [router, supabase])
 
   const stageOptions = useMemo(
     () => ({
@@ -69,6 +95,10 @@ export default function TeacherNewCoursePage() {
     setError(null)
 
     try {
+      if (!teacherId) {
+        throw new Error('Missing teacher id')
+      }
+
       const res = await fetch('/api/courses', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -185,7 +215,7 @@ export default function TeacherNewCoursePage() {
           <input
             className="w-full rounded border px-3 py-2 text-sm"
             value={teacherName}
-            onChange={e => setTeacherName(e.target.value)}
+            readOnly
           />
         </div>
 
@@ -194,14 +224,14 @@ export default function TeacherNewCoursePage() {
           <input
             className="w-full rounded border px-3 py-2 text-sm"
             value={teacherId}
-            onChange={e => setTeacherId(e.target.value)}
+            readOnly
           />
           <p className="text-xs text-slate-500">{t('teacherIdHelp')}</p>
         </div>
 
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || !teacherId}
           className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
         >
           {submitting ? t('creating') : t('submit')}

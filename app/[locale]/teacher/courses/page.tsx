@@ -1,19 +1,24 @@
 'use client'
 
-import {useEffect, useState} from 'react'
+import {useEffect, useMemo, useState} from 'react'
 import {useTranslations} from 'next-intl'
-import {Link} from '@/navigation'
+import {Link, useRouter} from '@/navigation'
 import {Course} from '@/lib/mockData'
-import {loadMockSession} from '@/lib/sessionMock'
-
-const currentTeacher = {id: 'user-teacher-1', name: 'Wahyu'}
+import {createClient} from '@/lib/supabase/client'
 
 export default function TeacherCoursesPage() {
   const t = useTranslations('teacher.courses')
+  const router = useRouter()
+  const supabase = useMemo(() => createClient(), [])
   const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [authLoading, setAuthLoading] = useState(true)
+  const [authError, setAuthError] = useState<string | null>(null)
+  const [teacherName, setTeacherName] = useState<string>('')
+  const [teacherId, setTeacherId] = useState<string>('')
+  const [isSuperuser, setIsSuperuser] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -32,10 +37,43 @@ export default function TeacherCoursesPage() {
     load()
   }, [t])
 
-  const session = loadMockSession()
-  const isSuperuser = session?.role === 'superuser'
-  const teacherName = session?.name ?? currentTeacher.name
-  const teacherId = session?.id ?? currentTeacher.id
+  useEffect(() => {
+    const loadAuth = async () => {
+      const {data: {user}, error: userError} = await supabase.auth.getUser()
+
+      if (userError || !user) {
+        setAuthError('Please log in as a teacher.')
+        router.push('/auth/login?as=teacher&redirectTo=/teacher/courses')
+        setAuthLoading(false)
+        return
+      }
+
+      const {data: profile, error: profileError} = await supabase
+        .from('profiles')
+        .select('id, display_name, role')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError) {
+        setAuthError(profileError.message)
+        setAuthLoading(false)
+        return
+      }
+
+      if (!profile || (profile.role !== 'teacher' && profile.role !== 'superuser')) {
+        setAuthError('You must be logged in as a teacher to view this page.')
+        setAuthLoading(false)
+        return
+      }
+
+      setTeacherId(profile.id)
+      setTeacherName(profile.display_name ?? '')
+      setIsSuperuser(profile.role === 'superuser')
+      setAuthLoading(false)
+    }
+
+    loadAuth()
+  }, [router, supabase])
 
   const myCourses = isSuperuser
     ? courses
@@ -57,7 +95,7 @@ export default function TeacherCoursesPage() {
         return searchableText.includes(normalizedQuery)
       })
     : myCourses
-  const showSearch = !loading && !error && myCourses.length > 0
+  const showSearch = !loading && !error && !authLoading && !authError && myCourses.length > 0
 
   return (
     <section className="space-y-4">
@@ -65,8 +103,12 @@ export default function TeacherCoursesPage() {
         <div>
           <h1 className="text-2xl font-bold">{t('title')}</h1>
           <p className="text-sm text-slate-600">
-            {t('loggedIn', {name: teacherName, id: teacherId})}{' '}
-            {isSuperuser && <span className="text-green-600">{t('superuserTag')}</span>}
+            {authLoading
+              ? t('loading')
+              : t('loggedIn', {name: teacherName, id: teacherId})}{' '}
+            {!authLoading && isSuperuser && (
+              <span className="text-green-600">{t('superuserTag')}</span>
+            )}
           </p>
         </div>
         <Link
@@ -77,6 +119,7 @@ export default function TeacherCoursesPage() {
         </Link>
       </header>
 
+      {authError && <p className="text-sm text-red-600">{authError}</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       {loading && !error && (
