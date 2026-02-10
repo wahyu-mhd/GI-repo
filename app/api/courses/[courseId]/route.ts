@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getCourseByIdFile, updateCourseFile } from '@/lib/courseFileStore'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import type { Stage } from '@/lib/mockData'
 
 export const runtime = 'nodejs'
@@ -10,9 +10,31 @@ export async function GET(
   { params }: { params: Promise<{ courseId: string }> }
 ) {
   const { courseId } = await params
-  const course = await getCourseByIdFile(courseId)
-  if (!course) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  return NextResponse.json(course)
+  const supabase = createSupabaseAdminClient()
+  const { data, error } = await supabase
+    .from('courses')
+    .select('id, title, description, teacher_id, teacher_name, stage, grade, subject, created_at')
+    .eq('id', courseId)
+    .single()
+
+  if (error || !data) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+
+  const gradeValue = Number(data.grade)
+  const normalizedGrade = Number.isFinite(gradeValue) ? gradeValue : 1
+
+  return NextResponse.json({
+    id: data.id,
+    title: data.title,
+    description: data.description,
+    teacherId: data.teacher_id ?? '',
+    teacherName: data.teacher_name ?? '',
+    stage: data.stage,
+    grade: normalizedGrade,
+    subject: data.subject,
+    createdAt: data.created_at,
+  })
 }
 
 export async function PUT(
@@ -20,8 +42,6 @@ export async function PUT(
   { params }: { params: Promise<{ courseId: string }> }
 ) {
   const { courseId } = await params
-  const existing = await getCourseByIdFile(courseId)
-  if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const body = (await req.json()) as Partial<{
     title: string
@@ -59,23 +79,50 @@ export async function PUT(
     )
   }
 
-  const nextGrade =
-    body.grade !== undefined
-      ? Number(body.grade)
-      : existing.grade
+  const updates: {
+    title?: string
+    description?: string
+    grade?: string
+    stage?: Stage
+  } = {}
 
-  const nextStage = body.stage ?? existing.stage
-
-  const updated = await updateCourseFile(courseId, {
-    title: body.title?.trim() ?? existing.title,
-    description: body.description?.trim() ?? existing.description,
-    grade: nextGrade,
-    stage: nextStage,
-  })
-
-  if (!updated) {
-    return NextResponse.json({ error: 'Update failed' }, { status: 500 })
+  if (body.title !== undefined) {
+    updates.title = body.title.trim()
+  }
+  if (body.description !== undefined) {
+    updates.description = body.description.trim()
+  }
+  if (body.grade !== undefined) {
+    updates.grade = String(Number(body.grade))
+  }
+  if (body.stage !== undefined) {
+    updates.stage = body.stage
   }
 
-  return NextResponse.json(updated)
+  const supabase = createSupabaseAdminClient()
+  const { data, error } = await supabase
+    .from('courses')
+    .update(updates)
+    .eq('id', courseId)
+    .select('id, title, description, teacher_id, teacher_name, stage, grade, subject, created_at')
+    .single()
+
+  if (error || !data) {
+    return NextResponse.json({ error: error?.message ?? 'Update failed' }, { status: 500 })
+  }
+
+  const gradeValue = Number(data.grade)
+  const normalizedGrade = Number.isFinite(gradeValue) ? gradeValue : 1
+
+  return NextResponse.json({
+    id: data.id,
+    title: data.title,
+    description: data.description,
+    teacherId: data.teacher_id ?? '',
+    teacherName: data.teacher_name ?? '',
+    stage: data.stage,
+    grade: normalizedGrade,
+    subject: data.subject,
+    createdAt: data.created_at,
+  })
 }

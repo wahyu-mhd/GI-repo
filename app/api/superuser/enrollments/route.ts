@@ -40,7 +40,14 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json(data)
+  const mapped = (data ?? []).map((row) => ({
+    id: row.id,
+    courseId: row.course_id,
+    studentId: row.student_id,
+    createdAt: row.created_at,
+  }))
+
+  return NextResponse.json(mapped)
 }
 export async function POST(req: Request) {
   const body = await req.json()
@@ -68,5 +75,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json(data, { status: 201 })
+  return NextResponse.json(
+    {
+      id: data.id,
+      courseId: data.course_id,
+      studentId: data.student_id,
+      createdAt: data.created_at,
+    },
+    { status: 201 }
+  )
 }

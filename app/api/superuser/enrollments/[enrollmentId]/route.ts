@@ -18,14 +18,14 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 
 export async function DELETE(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { enrollmentId: string } }
 ) {
   const supabase = createSupabaseAdminClient()
 
   const { error } = await supabase
     .from('enrollments')
     .delete()
-    .eq('id', params.id)
+    .eq('id', params.enrollmentId)
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
